@@ -1,5 +1,5 @@
 name: arenago
-description: "A new Flutter project."
+description: "ArenaGo customer mobile application."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -61,6 +61,18 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/images/logo.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: assets/images/logo.png
+  adaptive_icon_background: "#16885B"
+  adaptive_icon_foreground: assets/images/logo.png
+  min_sdk_android: 21
 
   # To add assets to your application, add an assets section, like this:
   # assets:
