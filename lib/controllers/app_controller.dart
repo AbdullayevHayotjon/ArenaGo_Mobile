@@ -127,7 +127,12 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> toggleLanguage() async {
-    language = language == 'uz' ? 'ru' : 'uz';
+    await setLanguage(language == 'uz' ? 'ru' : 'uz');
+  }
+
+  Future<void> setLanguage(String value) async {
+    if (value == language || (value != 'uz' && value != 'ru')) return;
+    language = value;
     await _storage.saveLanguage(language);
     notifyListeners();
   }

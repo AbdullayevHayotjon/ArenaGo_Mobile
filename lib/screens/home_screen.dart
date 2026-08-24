@@ -2,148 +2,158 @@ import 'package:flutter/material.dart';
 
 import '../controllers/app_controller.dart';
 import '../theme/app_theme.dart';
-import '../widgets/arena_logo.dart';
-import '../widgets/app_toast.dart';
-import '../widgets/preference_buttons.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.controller});
-  final AppController controller;
 
-  Future<void> _logout(BuildContext context) async {
-    final successMessage = controller.strings.t('logoutSuccess');
-    final error = await controller.logout();
-    if (error != null) {
-      if (context.mounted) AppToast.error(context, error);
-      return;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      AppToast.successFromRoot(successMessage);
-    });
-  }
+  final AppController controller;
 
   @override
   Widget build(BuildContext context) {
     final s = controller.strings;
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const ArenaLogo(size: 34),
-        actions: [
-          PreferenceButtons(controller: controller),
-          const SizedBox(width: 10),
-        ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 30),
-          children: [
-            Text(
-              '${s.t('hello')}, ${controller.session?.firstName ?? ''}!',
-              style: const TextStyle(
-                fontSize: 27,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -.7,
-              ),
+    final session = controller.session;
+
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 126),
+        children: [
+          Text(
+            s.t('navHome'),
+            style: const TextStyle(
+              fontSize: 29,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -.8,
             ),
-            const SizedBox(height: 6),
-            Text(
-              controller.session?.phoneNumber ?? '',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF06432C), Color(0xFF159461)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            ),
-            const SizedBox(height: 26),
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF06432C), Color(0xFF159461)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+              borderRadius: BorderRadius.circular(26),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x3322A96F),
+                  blurRadius: 26,
+                  offset: Offset(0, 12),
                 ),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Image.asset('assets/images/logo.png', width: 58, height: 58),
-                  const SizedBox(height: 18),
-                  Text(
-                    s.t('ready'),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 21,
-                      fontWeight: FontWeight.w800,
-                    ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  right: -18,
+                  top: -18,
+                  child: Icon(
+                    Icons.sports_soccer_rounded,
+                    color: Colors.white.withValues(alpha: .08),
+                    size: 132,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    s.t('readyText'),
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: .72),
-                      height: 1.5,
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: .14),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: const Icon(
+                        Icons.waving_hand_rounded,
+                        color: Colors.white,
+                        size: 23,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 24),
+                    Text(
+                      s.t('homeWelcome'),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: .72),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      session?.firstName ?? '',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 25,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      session?.phoneNumber ?? '',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: .72),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 22),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant.withValues(alpha: .5),
               ),
             ),
-            const SizedBox(height: 18),
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-                side: BorderSide(
-                  color: Theme.of(context).dividerColor.withValues(alpha: .35),
-                ),
-              ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                leading: Container(
-                  width: 48,
-                  height: 48,
+            child: Row(
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: .12),
-                    borderRadius: BorderRadius.circular(14),
+                    color: AppColors.primary.withValues(alpha: .11),
+                    borderRadius: BorderRadius.circular(15),
                   ),
                   child: const Icon(
                     Icons.verified_user_outlined,
                     color: AppColors.primary,
                   ),
                 ),
-                title: Text(
-                  s.t('secure'),
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        s.t('secure'),
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        s.t('secureText'),
+                        style: TextStyle(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 5),
-                  child: Text(s.t('secureText')),
-                ),
-              ),
+              ],
             ),
-            const SizedBox(height: 22),
-            OutlinedButton.icon(
-              onPressed: controller.logoutBusy ? null : () => _logout(context),
-              icon: controller.logoutBusy
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.logout),
-              label: Text(s.t(controller.logoutBusy ? 'loggingOut' : 'logout')),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-                foregroundColor: AppColors.danger,
-                side: const BorderSide(color: AppColors.danger),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

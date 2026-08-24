@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'controllers/app_controller.dart';
 import 'navigation/app_navigation.dart';
-import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/main_shell.dart';
 import 'screens/pin_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -27,7 +27,7 @@ class ArenaGoApp extends StatelessWidget {
           AppStage.login => LoginScreen(controller: controller),
           AppStage.createPin => PinScreen(controller: controller, create: true),
           AppStage.unlock => PinScreen(controller: controller, create: false),
-          AppStage.home => HomeScreen(controller: controller),
+          AppStage.home => MainShell(controller: controller),
         },
       ),
     );
