@@ -19,6 +19,7 @@ class AppController extends ChangeNotifier {
   String language = 'uz';
   ThemeMode themeMode = ThemeMode.light;
   bool busy = false;
+  bool logoutBusy = false;
 
   AppStrings get strings => AppStrings(language);
 
@@ -72,11 +73,27 @@ class AppController extends ChangeNotifier {
     return valid;
   }
 
-  Future<void> logout() async {
-    await _storage.clearAuth();
-    session = null;
-    stage = AppStage.login;
+  Future<String?> logout() async {
+    final activeSession = session;
+    if (activeSession == null || logoutBusy) return null;
+
+    logoutBusy = true;
     notifyListeners();
+    try {
+      await _authService.logout(activeSession.accessToken);
+      await _storage.clearAuth();
+      session = null;
+      stage = AppStage.login;
+      return null;
+    } on AuthException catch (error) {
+      if (error.code == 'network_error') return strings.t('networkError');
+      return error.message?.isNotEmpty == true
+          ? error.message
+          : strings.t('logoutError');
+    } finally {
+      logoutBusy = false;
+      notifyListeners();
+    }
   }
 
   Future<void> toggleTheme() async {

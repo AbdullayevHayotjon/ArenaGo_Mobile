@@ -10,6 +10,18 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.controller});
   final AppController controller;
 
+  Future<void> _logout(BuildContext context) async {
+    final successMessage = controller.strings.t('logoutSuccess');
+    final error = await controller.logout();
+    if (error != null) {
+      if (context.mounted) AppToast.error(context, error);
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppToast.successFromRoot(successMessage);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = controller.strings;
@@ -112,12 +124,15 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 22),
             OutlinedButton.icon(
-              onPressed: () {
-                AppToast.success(context, s.t('logoutSuccess'));
-                controller.logout();
-              },
-              icon: const Icon(Icons.logout),
-              label: Text(s.t('logout')),
+              onPressed: controller.logoutBusy ? null : () => _logout(context),
+              icon: controller.logoutBusy
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.logout),
+              label: Text(s.t(controller.logoutBusy ? 'loggingOut' : 'logout')),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
                 foregroundColor: AppColors.danger,

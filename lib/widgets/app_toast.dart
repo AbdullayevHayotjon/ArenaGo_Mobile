@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../navigation/app_navigation.dart';
 import '../theme/app_theme.dart';
 
 enum AppToastType { success, error, warning, info }
@@ -11,6 +12,11 @@ abstract final class AppToast {
 
   static void success(BuildContext context, String message) {
     show(context, message: message, type: AppToastType.success);
+  }
+
+  static void successFromRoot(String message) {
+    final context = appNavigatorKey.currentContext;
+    if (context != null) success(context, message);
   }
 
   static void error(BuildContext context, String message) {

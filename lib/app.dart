@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'controllers/app_controller.dart';
+import 'navigation/app_navigation.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/pin_screen.dart';
@@ -15,6 +16,7 @@ class ArenaGoApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: controller,
       builder: (context, _) => MaterialApp(
+        navigatorKey: appNavigatorKey,
         title: 'ArenaGo',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,

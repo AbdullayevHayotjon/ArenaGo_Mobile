@@ -68,6 +68,18 @@ class _PinScreenState extends State<PinScreen> {
     }
   }
 
+  Future<void> _logout() async {
+    final successMessage = widget.controller.strings.t('logoutSuccess');
+    final error = await widget.controller.logout();
+    if (error != null) {
+      if (mounted) AppToast.error(context, error);
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppToast.successFromRoot(successMessage);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final confirming = widget.create && _firstPin != null;
@@ -127,12 +139,17 @@ class _PinScreenState extends State<PinScreen> {
               const SizedBox(height: 28),
               if (!widget.create)
                 TextButton.icon(
-                  onPressed: () {
-                    AppToast.success(context, s.t('logoutSuccess'));
-                    widget.controller.logout();
-                  },
-                  icon: const Icon(Icons.logout, size: 18),
-                  label: Text(s.t('logout')),
+                  onPressed: widget.controller.logoutBusy ? null : _logout,
+                  icon: widget.controller.logoutBusy
+                      ? const SizedBox(
+                          width: 17,
+                          height: 17,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.logout, size: 18),
+                  label: Text(
+                    s.t(widget.controller.logoutBusy ? 'loggingOut' : 'logout'),
+                  ),
                 ),
               const Spacer(flex: 2),
             ],

@@ -17,6 +17,8 @@ class AppStrings {
       'loginSuccess': 'Muvaffaqiyatli kirdingiz.',
       'pinCreated': 'PIN-kod muvaffaqiyatli yaratildi.',
       'logoutSuccess': 'Tizimdan muvaffaqiyatli chiqdingiz.',
+      'loggingOut': 'Chiqilmoqda...',
+      'logoutError': 'Tizimdan chiqishda xatolik yuz berdi.',
       'invalidForm': 'Telefon raqami yoki parolni to‘g‘ri kiriting.',
       'customerOnly': 'Siz faqat ArenaGo web ilovasi orqali foydalana olasiz.',
       'networkError':
@@ -53,6 +55,8 @@ class AppStrings {
       'loginSuccess': 'Вы успешно вошли в систему.',
       'pinCreated': 'PIN-код успешно создан.',
       'logoutSuccess': 'Вы успешно вышли из системы.',
+      'loggingOut': 'Выполняется выход...',
+      'logoutError': 'Не удалось выйти из системы.',
       'invalidForm': 'Правильно введите номер телефона и пароль.',
       'customerOnly': 'Вы можете пользоваться только веб-приложением ArenaGo.',
       'networkError': 'Не удалось подключиться к серверу. Проверьте интернет и адрес сервера.',

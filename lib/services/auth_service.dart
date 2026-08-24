@@ -78,4 +78,46 @@ class AuthService {
       throw const AuthException('network_error');
     }
   }
+
+  Future<void> logout(String accessToken) async {
+    try {
+      final response = await _client
+          .post(
+            Uri.parse('$apiBaseUrl/auth/logout'),
+            headers: {
+              'accept': '*/*',
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+            },
+          )
+          .timeout(const Duration(seconds: 20));
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw AuthException('logout_failed', _readErrorMessage(response));
+      }
+    } on AuthException catch (error, stackTrace) {
+      AppLogger.error('AUTH', error, stackTrace);
+      rethrow;
+    } on TimeoutException catch (error, stackTrace) {
+      AppLogger.error('AUTH', error, stackTrace);
+      throw const AuthException('network_error');
+    } catch (error, stackTrace) {
+      AppLogger.error('AUTH', error, stackTrace);
+      throw const AuthException('network_error');
+    }
+  }
+
+  String? _readErrorMessage(http.Response response) {
+    final text = utf8.decode(response.bodyBytes).trim();
+    if (text.isEmpty) return null;
+    try {
+      final body = jsonDecode(text);
+      if (body is Map<String, dynamic>) {
+        return body['message']?.toString() ?? body['title']?.toString();
+      }
+    } on FormatException {
+      return text;
+    }
+    return text;
+  }
 }
