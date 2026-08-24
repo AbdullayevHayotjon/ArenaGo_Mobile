@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
 import '../models/auth_session.dart';
+import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../services/session_storage.dart';
 
@@ -9,11 +10,18 @@ enum AppStage { login, createPin, unlock, home }
 
 class AppController extends ChangeNotifier {
   AppController({AuthService? authService, SessionStorage? storage})
-    : _authService = authService ?? AuthService(),
-      _storage = storage ?? SessionStorage();
+    : _storage = storage ?? SessionStorage() {
+    _apiClient = ApiClient(
+      sessionProvider: () => session,
+      onSessionRefreshed: _saveRefreshedSession,
+      onSessionExpired: _clearExpiredSession,
+    );
+    _authService = authService ?? AuthService(apiClient: _apiClient);
+  }
 
-  final AuthService _authService;
   final SessionStorage _storage;
+  late final ApiClient _apiClient;
+  late final AuthService _authService;
   AuthSession? session;
   AppStage stage = AppStage.login;
   String language = 'uz';
@@ -22,6 +30,7 @@ class AppController extends ChangeNotifier {
   bool logoutBusy = false;
 
   AppStrings get strings => AppStrings(language);
+  ApiClient get apiClient => _apiClient;
 
   Future<void> initialize() async {
     language = await _storage.readLanguage();
@@ -94,6 +103,21 @@ class AppController extends ChangeNotifier {
       logoutBusy = false;
       notifyListeners();
     }
+  }
+
+  Future<void> _saveRefreshedSession(AuthSession refreshedSession) async {
+    session = refreshedSession;
+    await _storage.saveSession(refreshedSession);
+    notifyListeners();
+  }
+
+  Future<void> _clearExpiredSession() async {
+    await _storage.clearAuth();
+    session = null;
+    stage = AppStage.login;
+    busy = false;
+    logoutBusy = false;
+    notifyListeners();
   }
 
   Future<void> toggleTheme() async {

@@ -23,13 +23,6 @@ class SessionStorage {
         jsonDecode(raw) as Map<String, dynamic>,
       );
       if (session.role.toLowerCase() != 'customer') return null;
-      final refreshExpiry = DateTime.tryParse(session.refreshTokenExpiresAt)
-          ?.toUtc();
-      if (refreshExpiry != null &&
-          refreshExpiry.isBefore(DateTime.now().toUtc())) {
-        await clearAuth();
-        return null;
-      }
       return session;
     } catch (_) {
       await clearAuth();

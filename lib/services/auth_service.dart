@@ -4,13 +4,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/auth_session.dart';
+import 'api_client.dart';
+export 'api_config.dart' show apiBaseUrl;
 import 'api_logging_client.dart';
 import 'app_logger.dart';
-
-const apiBaseUrl = String.fromEnvironment(
-  'API_BASE_URL',
-  defaultValue: 'http://172.29.90.122:8080/api',
-);
 
 class AuthException implements Exception {
   const AuthException(this.code, [this.message]);
@@ -22,24 +19,23 @@ class AuthException implements Exception {
 }
 
 class AuthService {
-  AuthService({http.Client? client}) : _client = client ?? ApiLoggingClient();
-  final http.Client _client;
+  AuthService({ApiClient? apiClient, http.Client? client})
+    : _apiClient = apiClient ?? ApiClient(client: client ?? ApiLoggingClient());
+
+  final ApiClient _apiClient;
 
   Future<AuthSession> login(String phoneNumber, String password) async {
     try {
-      final response = await _client
-          .post(
-            Uri.parse('$apiBaseUrl/auth/login'),
-            headers: const {
-              'accept': 'text/plain',
-              'Content-Type': 'application/json',
-            },
-            body: jsonEncode({
-              'phoneNumber': phoneNumber,
-              'password': password,
-            }),
-          )
-          .timeout(const Duration(seconds: 20));
+      final response = await _apiClient.request(
+        'POST',
+        '/auth/login',
+        authenticated: false,
+        headers: const {
+          'accept': 'text/plain',
+          'Content-Type': 'application/json',
+        },
+        body: {'phoneNumber': phoneNumber, 'password': password},
+      );
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         String? message;
@@ -81,16 +77,12 @@ class AuthService {
 
   Future<void> logout(String accessToken) async {
     try {
-      final response = await _client
-          .post(
-            Uri.parse('$apiBaseUrl/auth/logout'),
-            headers: {
-              'accept': '*/*',
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $accessToken',
-            },
-          )
-          .timeout(const Duration(seconds: 20));
+      final response = await _apiClient.request(
+        'POST',
+        '/auth/logout',
+        headers: const {'accept': '*/*', 'Content-Type': 'application/json'},
+        accessTokenOverride: accessToken,
+      );
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw AuthException('logout_failed', _readErrorMessage(response));
