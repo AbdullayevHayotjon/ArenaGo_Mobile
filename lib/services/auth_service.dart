@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/auth_session.dart';
+import 'api_logging_client.dart';
+import 'app_logger.dart';
 
 const apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
@@ -14,10 +16,13 @@ class AuthException implements Exception {
   const AuthException(this.code, [this.message]);
   final String code;
   final String? message;
+
+  @override
+  String toString() => 'AuthException(code: $code, message: $message)';
 }
 
 class AuthService {
-  AuthService({http.Client? client}) : _client = client ?? http.Client();
+  AuthService({http.Client? client}) : _client = client ?? ApiLoggingClient();
   final http.Client _client;
 
   Future<AuthSession> login(String phoneNumber, String password) async {
@@ -59,13 +64,17 @@ class AuthService {
         throw const AuthException('invalid_response');
       }
       return session;
-    } on AuthException {
+    } on AuthException catch (error, stackTrace) {
+      AppLogger.error('AUTH', error, stackTrace);
       rethrow;
-    } on TimeoutException {
+    } on TimeoutException catch (error, stackTrace) {
+      AppLogger.error('AUTH', error, stackTrace);
       throw const AuthException('network_error');
-    } on FormatException {
+    } on FormatException catch (error, stackTrace) {
+      AppLogger.error('AUTH', error, stackTrace);
       throw const AuthException('invalid_response');
-    } catch (_) {
+    } catch (error, stackTrace) {
+      AppLogger.error('AUTH', error, stackTrace);
       throw const AuthException('network_error');
     }
   }
