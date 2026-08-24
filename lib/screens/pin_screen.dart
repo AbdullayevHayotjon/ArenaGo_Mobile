@@ -197,6 +197,7 @@ class _PinCodeFields extends StatelessWidget {
                   controller.selection = TextSelection.collapsed(
                     offset: controller.text.length,
                   );
+                  SystemChannels.textInput.invokeMethod<void>('TextInput.show');
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
