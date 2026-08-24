@@ -194,18 +194,21 @@ class _FootballFieldDetailsScreenState
               bookingLabel: s.t('bookNow'),
             ),
       body: !_loading && _error == null && field != null
-          ? _DetailsContent(
-              field: field,
-              language: widget.controller.language,
-              pageTitle: s.t('fieldDetailsTitle'),
-              backLabel: s.t('back'),
-              onBack: () => Navigator.of(context).pop(),
-              onToggleFavorite: _toggleFavorite,
-              onOpenImage: () => _openFullScreenImage(field),
-              onOpenMap: () => _openExternalMap(field),
-              onCall: () => _callPhone(field),
-              onOpenAttribution: _openAttribution,
-              strings: s.t,
+          ? SafeArea(
+              bottom: false,
+              child: _DetailsContent(
+                field: field,
+                language: widget.controller.language,
+                pageTitle: s.t('fieldDetailsTitle'),
+                backLabel: s.t('back'),
+                onBack: () => Navigator.of(context).pop(),
+                onToggleFavorite: _toggleFavorite,
+                onOpenImage: () => _openFullScreenImage(field),
+                onOpenMap: () => _openExternalMap(field),
+                onCall: () => _callPhone(field),
+                onOpenAttribution: _openAttribution,
+                strings: s.t,
+              ),
             )
           : SafeArea(
               child: Column(
