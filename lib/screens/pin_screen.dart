@@ -3,10 +3,8 @@ import 'package:flutter/services.dart';
 
 import '../controllers/app_controller.dart';
 import '../theme/app_theme.dart';
-import '../widgets/arena_logo.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/floating_football.dart';
-import '../widgets/preference_buttons.dart';
 
 class PinScreen extends StatefulWidget {
   const PinScreen({super.key, required this.controller, required this.create});
@@ -26,9 +24,8 @@ class _PinScreenState extends State<PinScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future<void>.delayed(const Duration(milliseconds: 220));
-      if (mounted) _showPinKeyboard();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _ensurePinKeyboardIsVisible();
     });
   }
 
@@ -95,6 +92,18 @@ class _PinScreenState extends State<PinScreen> {
     SystemChannels.textInput.invokeMethod<void>('TextInput.show');
   }
 
+  Future<void> _ensurePinKeyboardIsVisible() async {
+    for (var attempt = 0; attempt < 4; attempt++) {
+      await Future<void>.delayed(
+        Duration(milliseconds: attempt == 0 ? 180 : 320),
+      );
+      if (!mounted) return;
+      _showPinKeyboard();
+      await Future<void>.delayed(const Duration(milliseconds: 160));
+      if (!mounted || MediaQuery.viewInsetsOf(context).bottom > 0) return;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final confirming = widget.create && _firstPin != null;
@@ -106,10 +115,27 @@ class _PinScreenState extends State<PinScreen> {
           child: Column(
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const ArenaLogo(size: 38, animate: true),
-                  PreferenceButtons(controller: widget.controller),
+                  if (widget.create)
+                    _PinActionButton(
+                      tooltip: s.t('backToLogin'),
+                      loading: widget.controller.logoutBusy,
+                      icon: Icons.arrow_back_rounded,
+                      onPressed: widget.controller.logoutBusy ? null : _logout,
+                    )
+                  else
+                    const SizedBox(width: 48),
+                  const Spacer(),
+                  if (!widget.create)
+                    _PinActionButton(
+                      tooltip: s.t('logout'),
+                      loading: widget.controller.logoutBusy,
+                      icon: Icons.logout_rounded,
+                      foregroundColor: AppColors.danger,
+                      onPressed: widget.controller.logoutBusy ? null : _logout,
+                    )
+                  else
+                    const SizedBox(width: 48),
                 ],
               ),
               const Spacer(),
@@ -153,20 +179,6 @@ class _PinScreenState extends State<PinScreen> {
                 onTap: _showPinKeyboard,
               ),
               const SizedBox(height: 28),
-              if (!widget.create)
-                TextButton.icon(
-                  onPressed: widget.controller.logoutBusy ? null : _logout,
-                  icon: widget.controller.logoutBusy
-                      ? const SizedBox(
-                          width: 17,
-                          height: 17,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.logout, size: 18),
-                  label: Text(
-                    s.t(widget.controller.logoutBusy ? 'loggingOut' : 'logout'),
-                  ),
-                ),
               const Spacer(flex: 2),
             ],
           ),
@@ -191,101 +203,138 @@ class _PinCodeFields extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ClipRect(
-          child: SizedBox(
-            width: 1,
-            height: 1,
+    return SizedBox(
+      width: 262,
+      height: 62,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: Listenable.merge([controller, focusNode]),
+                builder: (context, _) {
+                  final length = controller.text.length;
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(4, (index) {
+                      final filled = index < length;
+                      final active =
+                          focusNode.hasFocus &&
+                          (index == length || (length == 4 && index == 3));
+                      return Padding(
+                        padding: EdgeInsets.only(right: index == 3 ? 0 : 10),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOut,
+                          width: 58,
+                          height: 62,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: filled
+                                ? AppColors.primary.withValues(alpha: .10)
+                                : Theme.of(context).colorScheme.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: active || filled
+                                  ? AppColors.primary
+                                  : Theme.of(context)
+                                        .colorScheme
+                                        .outlineVariant,
+                              width: active ? 2 : 1.2,
+                            ),
+                            boxShadow: active
+                                ? const [
+                                    BoxShadow(
+                                      color: Color(0x2922A96F),
+                                      blurRadius: 16,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 140),
+                            child: filled
+                                ? const Text(
+                                    '●',
+                                    key: ValueKey('filled'),
+                                    style: TextStyle(
+                                      color: AppColors.primaryDark,
+                                      fontSize: 19,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  )
+                                : SizedBox(key: ValueKey('empty-$index')),
+                          ),
+                        ),
+                      );
+                    }),
+                  );
+                },
+              ),
+            ),
+          ),
+          Positioned.fill(
             child: Opacity(
-              opacity: 0,
+              opacity: .01,
               child: TextField(
                 controller: controller,
                 focusNode: focusNode,
                 autofocus: true,
                 keyboardType: TextInputType.number,
+                obscureText: true,
+                enableSuggestions: false,
+                autocorrect: false,
                 enableInteractiveSelection: false,
                 showCursor: false,
+                style: const TextStyle(color: Colors.transparent),
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(4),
                 ],
+                onTap: onTap,
                 onChanged: onChanged,
                 decoration: const InputDecoration.collapsed(hintText: ''),
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 3),
-        AnimatedBuilder(
-          animation: Listenable.merge([controller, focusNode]),
-          builder: (context, _) {
-            final length = controller.text.length;
-            return Semantics(
-              label: '4-digit PIN',
-              textField: true,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onTap,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(4, (index) {
-                    final filled = index < length;
-                    final active =
-                        focusNode.hasFocus &&
-                        (index == length || (length == 4 && index == 3));
-                    return Padding(
-                      padding: EdgeInsets.only(right: index == 3 ? 0 : 10),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        curve: Curves.easeOut,
-                        width: 58,
-                        height: 62,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: filled
-                              ? AppColors.primary.withValues(alpha: .10)
-                              : Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: active || filled
-                                ? AppColors.primary
-                                : Theme.of(context).colorScheme.outlineVariant,
-                            width: active ? 2 : 1.2,
-                          ),
-                          boxShadow: active
-                              ? const [
-                                  BoxShadow(
-                                    color: Color(0x2922A96F),
-                                    blurRadius: 16,
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 140),
-                          child: filled
-                              ? const Text(
-                                  '●',
-                                  key: ValueKey('filled'),
-                                  style: TextStyle(
-                                    color: AppColors.primaryDark,
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                )
-                              : SizedBox(key: ValueKey('empty-$index')),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-            );
-          },
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PinActionButton extends StatelessWidget {
+  const _PinActionButton({
+    required this.tooltip,
+    required this.loading,
+    required this.icon,
+    required this.onPressed,
+    this.foregroundColor = AppColors.primaryDark,
+  });
+
+  final String tooltip;
+  final bool loading;
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final Color foregroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      style: IconButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        backgroundColor: AppColors.primary.withValues(alpha: .10),
+        foregroundColor: foregroundColor,
+      ),
+      icon: loading
+          ? const SizedBox(
+              width: 19,
+              height: 19,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(icon),
     );
   }
 }
