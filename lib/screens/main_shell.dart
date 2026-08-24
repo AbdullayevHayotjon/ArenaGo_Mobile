@@ -38,23 +38,40 @@ class _MainShellState extends State<MainShell> {
     ];
 
     return Scaffold(
-      extendBody: true,
-      body: IndexedStack(index: _selectedIndex, children: tabs),
-      bottomNavigationBar: _FloatingNavigationBar(
-        selectedIndex: _selectedIndex,
-        onSelected: (index) => setState(() => _selectedIndex = index),
-        items: [
-          _NavigationItem(Icons.home_outlined, Icons.home_rounded, s.t('navHome')),
-          _NavigationItem(Icons.map_outlined, Icons.map_rounded, s.t('navMap')),
-          _NavigationItem(
-            Icons.receipt_long_outlined,
-            Icons.receipt_long_rounded,
-            s.t('navOrders'),
-          ),
-          _NavigationItem(
-            Icons.person_outline_rounded,
-            Icons.person_rounded,
-            s.t('navProfile'),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          IndexedStack(index: _selectedIndex, children: tabs),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _FloatingNavigationBar(
+              selectedIndex: _selectedIndex,
+              onSelected: (index) => setState(() => _selectedIndex = index),
+              items: [
+                _NavigationItem(
+                  Icons.home_outlined,
+                  Icons.home_rounded,
+                  s.t('navHome'),
+                ),
+                _NavigationItem(
+                  Icons.map_outlined,
+                  Icons.map_rounded,
+                  s.t('navMap'),
+                ),
+                _NavigationItem(
+                  Icons.receipt_long_outlined,
+                  Icons.receipt_long_rounded,
+                  s.t('navOrders'),
+                ),
+                _NavigationItem(
+                  Icons.person_outline_rounded,
+                  Icons.person_rounded,
+                  s.t('navProfile'),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -145,7 +162,9 @@ class _FloatingNavigationBar extends StatelessWidget {
                             ),
                             const SizedBox(height: 3),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 2,
+                              ),
                               child: Text(
                                 item.label,
                                 maxLines: 1,

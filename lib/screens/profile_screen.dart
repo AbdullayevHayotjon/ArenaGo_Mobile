@@ -96,15 +96,11 @@ class ProfileScreen extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.logout_rounded),
-            label: Text(
-              s.t(controller.logoutBusy ? 'loggingOut' : 'logout'),
-            ),
+            label: Text(s.t(controller.logoutBusy ? 'loggingOut' : 'logout')),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(54),
               foregroundColor: AppColors.danger,
-              side: BorderSide(
-                color: AppColors.danger.withValues(alpha: .55),
-              ),
+              side: BorderSide(color: AppColors.danger.withValues(alpha: .55)),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -267,9 +263,8 @@ class _SurfaceCard extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withValues(
-            alpha: dark ? .28 : .55,
-          ),
+          color: Theme.of(context).colorScheme.outlineVariant
+              .withValues(alpha: dark ? .28 : .55),
         ),
         boxShadow: dark
             ? null
@@ -294,7 +289,8 @@ class _CardDivider extends StatelessWidget {
     return Divider(
       height: 1,
       indent: 54,
-      color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: .45),
+      color: Theme.of(context).colorScheme.outlineVariant
+          .withValues(alpha: .45),
     );
   }
 }
@@ -367,7 +363,10 @@ class _ThemeSetting extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(s.t('theme'), style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(
+                  s.t('theme'),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 3),
                 Text(
                   s.t(dark ? 'darkMode' : 'lightMode'),
@@ -408,7 +407,10 @@ class _LanguageSetting extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(s.t('language'), style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(
+                  s.t('language'),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 3),
                 Text(
                   s.t('languageSubtitle'),
