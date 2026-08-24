@@ -12,6 +12,33 @@ class FootballFieldService {
     String? search,
     required int pageNumber,
     int pageSize = 20,
+  }) {
+    return _getPage(
+      '/football-fields',
+      search: search,
+      pageNumber: pageNumber,
+      pageSize: pageSize,
+    );
+  }
+
+  Future<FootballFieldPage> getFavorites({
+    String? search,
+    required int pageNumber,
+    int pageSize = 20,
+  }) {
+    return _getPage(
+      '/me/favorite-fields',
+      search: search,
+      pageNumber: pageNumber,
+      pageSize: pageSize,
+    );
+  }
+
+  Future<FootballFieldPage> _getPage(
+    String path, {
+    String? search,
+    required int pageNumber,
+    required int pageSize,
   }) async {
     final query = <String, String>{
       'PageNumber': '$pageNumber',
@@ -21,10 +48,7 @@ class FootballFieldService {
     if (normalizedSearch.isNotEmpty) query['Search'] = normalizedSearch;
 
     final queryString = Uri(queryParameters: query).query;
-    final response = await _apiClient.request(
-      'GET',
-      '/football-fields?$queryString',
-    );
+    final response = await _apiClient.request('GET', '$path?$queryString');
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw FootballFieldException(statusCode: response.statusCode);

@@ -11,9 +11,14 @@ import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.controller});
+  const HomeScreen({
+    super.key,
+    required this.controller,
+    required this.onOpenFavorites,
+  });
 
   final AppController controller;
+  final VoidCallback onOpenFavorites;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -222,6 +227,7 @@ class _HomeScreenState extends State<HomeScreen>
                     _TopBar(
                       title: s.t('navHome'),
                       favoritesLabel: s.t('favorites'),
+                      onFavoritesPressed: widget.onOpenFavorites,
                     ),
                     const SizedBox(height: 18),
                     _ArenaBanner(
@@ -359,10 +365,15 @@ class _HomeScreenState extends State<HomeScreen>
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.title, required this.favoritesLabel});
+  const _TopBar({
+    required this.title,
+    required this.favoritesLabel,
+    required this.onFavoritesPressed,
+  });
 
   final String title;
   final String favoritesLabel;
+  final VoidCallback onFavoritesPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -382,7 +393,7 @@ class _TopBar extends StatelessWidget {
           color: Theme.of(context).colorScheme.surface,
           shape: const CircleBorder(),
           child: IconButton(
-            onPressed: () {},
+            onPressed: onFavoritesPressed,
             tooltip: favoritesLabel,
             icon: const Icon(Icons.bookmark_border_rounded),
           ),

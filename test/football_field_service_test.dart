@@ -82,4 +82,26 @@ void main() {
       expect(methods, ['POST', 'DELETE']);
     },
   );
+
+  test('loads favorites from the customer favorite endpoint', () async {
+    final httpClient = MockClient((request) async {
+      expect(request.method, 'GET');
+      expect(request.url.path, endsWith('/api/me/favorite-fields'));
+      expect(request.url.queryParameters['Search'], 'stadium');
+      expect(request.url.queryParameters['PageNumber'], '1');
+      expect(request.url.queryParameters['PageSize'], '20');
+      return http.Response(
+        '{"items":[],"pageNumber":1,"pageSize":20,"totalCount":0,'
+        '"totalPages":0,"hasPreviousPage":false,"hasNextPage":false}',
+        200,
+      );
+    });
+
+    final service = FootballFieldService(ApiClient(client: httpClient));
+    final page = await service.getFavorites(search: 'stadium', pageNumber: 1);
+
+    expect(page.items, isEmpty);
+    expect(page.totalCount, 0);
+    expect(page.hasNextPage, isFalse);
+  });
 }

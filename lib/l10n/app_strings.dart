@@ -78,6 +78,15 @@ class AppStrings {
       'tryAgain': 'Qayta urinish',
       'allFieldsLoaded': 'Barcha maydonlar ko‘rsatildi',
       'favoriteUpdateError': 'Saqlanganlar holatini o‘zgartirib bo‘lmadi.',
+      'back': 'Orqaga',
+      'savedFieldsTitle': 'Saqlanganlar',
+      'savedFieldsSubtitle': 'Siz belgilagan futbol maydonlari',
+      'searchSavedFields': 'Saqlangan maydonlardan qidiring',
+      'favoritesLoadError': 'Saqlangan maydonlarni yuklab bo‘lmadi',
+      'favoritesEmpty': 'Saqlangan maydonlar yo‘q',
+      'favoritesEmptyText':
+          'Bosh menyudan yoqqan maydonlaringizni saqlab qo‘ying.',
+      'allFavoritesLoaded': 'Barcha saqlangan maydonlar ko‘rsatildi',
     },
     'ru': {
       'welcome': 'Добро пожаловать!',
@@ -150,6 +159,15 @@ class AppStrings {
       'tryAgain': 'Повторить',
       'allFieldsLoaded': 'Все поля показаны',
       'favoriteUpdateError': 'Не удалось изменить сохранённое состояние.',
+      'back': 'Назад',
+      'savedFieldsTitle': 'Сохранённые',
+      'savedFieldsSubtitle': 'Отмеченные вами футбольные поля',
+      'searchSavedFields': 'Поиск среди сохранённых полей',
+      'favoritesLoadError': 'Не удалось загрузить сохранённые поля',
+      'favoritesEmpty': 'Нет сохранённых полей',
+      'favoritesEmptyText':
+          'Сохраняйте понравившиеся поля на главной странице.',
+      'allFavoritesLoaded': 'Все сохранённые поля показаны',
     },
   };
 

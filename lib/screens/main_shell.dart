@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../controllers/app_controller.dart';
 import '../theme/app_theme.dart';
+import 'favorite_fields_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 
@@ -23,7 +24,17 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     final s = widget.controller.strings;
     final tabs = [
-      HomeScreen(controller: widget.controller),
+      HomeScreen(
+        controller: widget.controller,
+        onOpenFavorites: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  FavoriteFieldsScreen(controller: widget.controller),
+            ),
+          );
+        },
+      ),
       _ComingSoonScreen(
         icon: Icons.map_outlined,
         title: s.t('navMap'),
