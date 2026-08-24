@@ -8,6 +8,7 @@ import '../controllers/app_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/arena_logo.dart';
 import '../widgets/app_toast.dart';
+import '../widgets/floating_football.dart';
 import '../widgets/preference_buttons.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -234,12 +235,6 @@ class _PitchHero extends StatefulWidget {
 }
 
 class _PitchHeroState extends State<_PitchHero> with TickerProviderStateMixin {
-  late final AnimationController _centerFloat = _repeatingController(
-    const Duration(milliseconds: 3200),
-  );
-  late final AnimationController _centerSpin = _repeatingController(
-    const Duration(seconds: 8),
-  );
   late final AnimationController _firstBall = _repeatingController(
     const Duration(seconds: 7),
   );
@@ -251,12 +246,7 @@ class _PitchHeroState extends State<_PitchHero> with TickerProviderStateMixin {
     return AnimationController(vsync: this, duration: duration)..repeat();
   }
 
-  List<AnimationController> get _controllers => [
-    _centerFloat,
-    _centerSpin,
-    _firstBall,
-    _secondBall,
-  ];
+  List<AnimationController> get _controllers => [_firstBall, _secondBall];
 
   @override
   void didChangeDependencies() {
@@ -304,7 +294,6 @@ class _PitchHeroState extends State<_PitchHero> with TickerProviderStateMixin {
         builder: (context, constraints) => AnimatedBuilder(
           animation: Listenable.merge(_controllers),
           builder: (context, _) {
-            final floatPhase = math.sin(math.pi * _centerFloat.value);
             final first = _sampleMotion(_firstBall.value, const [
               _BallFrame(Offset.zero, 0),
               _BallFrame(Offset(65, 35), 160 / 360),
@@ -333,27 +322,12 @@ class _PitchHeroState extends State<_PitchHero> with TickerProviderStateMixin {
                   bottom: constraints.maxHeight * .18,
                   child: _MovingBall(size: 20, frame: second),
                 ),
-                Transform.translate(
-                  offset: Offset(0, -9 * floatPhase),
-                  child: Transform.scale(
-                    scale: 1 + (.04 * floatPhase),
-                    child: Transform.rotate(
-                      angle: _centerSpin.value * (350 / 360) * math.pi * 2,
-                      child: Container(
-                        width: 84,
-                        height: 84,
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: .10),
-                          shape: BoxShape.circle,
-                          boxShadow: const [
-                            BoxShadow(color: Color(0x4474EDB5), blurRadius: 35),
-                          ],
-                        ),
-                        child: Image.asset('assets/images/logo.png'),
-                      ),
-                    ),
-                  ),
+                const FloatingFootball(
+                  size: 84,
+                  padding: 14,
+                  backgroundColor: Color(0x1AFFFFFF),
+                  shadowColor: Color(0x4474EDB5),
+                  shadowBlurRadius: 35,
                 ),
               ],
             );

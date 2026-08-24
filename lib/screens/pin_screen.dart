@@ -5,6 +5,7 @@ import '../controllers/app_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/arena_logo.dart';
 import '../widgets/app_toast.dart';
+import '../widgets/floating_football.dart';
 import '../widgets/preference_buttons.dart';
 
 class PinScreen extends StatefulWidget {
@@ -18,12 +19,14 @@ class PinScreen extends StatefulWidget {
 
 class _PinScreenState extends State<PinScreen> {
   final _pin = TextEditingController();
+  final _pinFocus = FocusNode();
   String? _firstPin;
   bool _checking = false;
 
   @override
   void dispose() {
     _pin.dispose();
+    _pinFocus.dispose();
     super.dispose();
   }
 
@@ -78,20 +81,17 @@ class _PinScreenState extends State<PinScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const ArenaLogo(size: 38),
+                  const ArenaLogo(size: 38, animate: true),
                   PreferenceButtons(controller: widget.controller),
                 ],
               ),
               const Spacer(),
-              Container(
-                width: 92,
-                height: 92,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: .12),
-                  shape: BoxShape.circle,
-                ),
-                child: Image.asset('assets/images/logo.png'),
+              const FloatingFootball(
+                size: 92,
+                padding: 20,
+                backgroundColor: Color(0x1F22A96F),
+                shadowColor: Color(0x3322A96F),
+                shadowBlurRadius: 28,
               ),
               const SizedBox(height: 28),
               Text(
@@ -119,34 +119,10 @@ class _PinScreenState extends State<PinScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-              SizedBox(
-                width: 210,
-                child: TextField(
-                  controller: _pin,
-                  autofocus: true,
-                  keyboardType: TextInputType.number,
-                  obscureText: true,
-                  obscuringCharacter: '●',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 25,
-                    letterSpacing: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(4),
-                  ],
-                  onChanged: _handle,
-                  decoration: const InputDecoration(
-                    counterText: '',
-                    contentPadding: EdgeInsets.only(
-                      left: 20,
-                      top: 17,
-                      bottom: 17,
-                    ),
-                  ),
-                ),
+              _PinCodeFields(
+                controller: _pin,
+                focusNode: _pinFocus,
+                onChanged: _handle,
               ),
               const SizedBox(height: 28),
               if (!widget.create)
@@ -163,6 +139,123 @@ class _PinScreenState extends State<PinScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PinCodeFields extends StatelessWidget {
+  const _PinCodeFields({
+    required this.controller,
+    required this.focusNode,
+    required this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRect(
+          child: SizedBox(
+            width: 1,
+            height: 1,
+            child: Opacity(
+              opacity: 0,
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                enableInteractiveSelection: false,
+                showCursor: false,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(4),
+                ],
+                onChanged: onChanged,
+                decoration: const InputDecoration.collapsed(hintText: ''),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 3),
+        AnimatedBuilder(
+          animation: Listenable.merge([controller, focusNode]),
+          builder: (context, _) {
+            final length = controller.text.length;
+            return Semantics(
+              label: '4-digit PIN',
+              textField: true,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  focusNode.requestFocus();
+                  controller.selection = TextSelection.collapsed(
+                    offset: controller.text.length,
+                  );
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(4, (index) {
+                    final filled = index < length;
+                    final active =
+                        focusNode.hasFocus &&
+                        (index == length || (length == 4 && index == 3));
+                    return Padding(
+                      padding: EdgeInsets.only(right: index == 3 ? 0 : 10),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeOut,
+                        width: 58,
+                        height: 62,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: filled
+                              ? AppColors.primary.withValues(alpha: .10)
+                              : Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: active || filled
+                                ? AppColors.primary
+                                : Theme.of(context).colorScheme.outlineVariant,
+                            width: active ? 2 : 1.2,
+                          ),
+                          boxShadow: active
+                              ? const [
+                                  BoxShadow(
+                                    color: Color(0x2922A96F),
+                                    blurRadius: 16,
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 140),
+                          child: filled
+                              ? const Text(
+                                  '●',
+                                  key: ValueKey('filled'),
+                                  style: TextStyle(
+                                    color: AppColors.primaryDark,
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                )
+                              : SizedBox(key: ValueKey('empty-$index')),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }
