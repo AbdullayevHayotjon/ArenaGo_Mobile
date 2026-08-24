@@ -103,6 +103,7 @@ class AppStrings {
       'mapOpenError': 'Xarita ilovasini ochib bo‘lmadi.',
       'bookNow': 'Bron qilish',
       'hourShort': 'soat',
+      'callOpenError': 'Telefon ilovasini ochib bo‘lmadi.',
     },
     'ru': {
       'welcome': 'Добро пожаловать!',
@@ -200,6 +201,7 @@ class AppStrings {
       'mapOpenError': 'Не удалось открыть приложение карты.',
       'bookNow': 'Забронировать',
       'hourShort': 'час',
+      'callOpenError': 'Не удалось открыть приложение телефона.',
     },
   };
 

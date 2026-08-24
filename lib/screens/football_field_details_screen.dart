@@ -15,10 +15,12 @@ class FootballFieldDetailsScreen extends StatefulWidget {
     super.key,
     required this.controller,
     required this.footballFieldId,
+    this.onFavoriteChanged,
   });
 
   final AppController controller;
   final String footballFieldId;
+  final ValueChanged<bool>? onFavoriteChanged;
 
   @override
   State<FootballFieldDetailsScreen> createState() =>
@@ -31,6 +33,7 @@ class _FootballFieldDetailsScreenState
 
   FootballField? _field;
   bool _loading = true;
+  bool _favoriteBusy = false;
   String? _error;
 
   @override
@@ -112,6 +115,70 @@ class _FootballFieldDetailsScreenState
     );
   }
 
+  Future<void> _callPhone(FootballField field) async {
+    if (field.phoneNumber.trim().isEmpty) return;
+    try {
+      final opened = await launchUrl(
+        Uri(scheme: 'tel', path: field.phoneNumber.trim()),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened && mounted) {
+        AppToast.error(context, widget.controller.strings.t('callOpenError'));
+      }
+    } catch (_) {
+      if (mounted) {
+        AppToast.error(context, widget.controller.strings.t('callOpenError'));
+      }
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    final field = _field;
+    if (field == null || _favoriteBusy) return;
+    final wasFavorite = field.isFavorite;
+    final nextFavorite = !wasFavorite;
+
+    setState(() {
+      _favoriteBusy = true;
+      _field = field.copyWith(isFavorite: nextFavorite);
+    });
+    try {
+      if (wasFavorite) {
+        await _footballFieldService.removeFromFavorites(field.id);
+      } else {
+        await _footballFieldService.addToFavorites(field.id);
+      }
+      widget.onFavoriteChanged?.call(nextFavorite);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _field = field.copyWith(isFavorite: wasFavorite));
+      AppToast.error(
+        context,
+        widget.controller.strings.t('favoriteUpdateError'),
+      );
+    } finally {
+      if (mounted) setState(() => _favoriteBusy = false);
+    }
+  }
+
+  void _openFullScreenImage(FootballField field) {
+    final imageUrl = resolveApiUrl(field.image?.url ?? '');
+    if (imageUrl.isEmpty) return;
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierColor: Colors.black,
+        pageBuilder: (_, _, _) => _FullScreenImage(
+          imageUrl: imageUrl,
+          heroTag: 'football-field-image-${field.id}',
+          closeLabel: widget.controller.strings.t('back'),
+        ),
+        transitionsBuilder: (_, animation, _, child) =>
+            FadeTransition(opacity: animation, child: child),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = widget.controller.strings;
@@ -126,59 +193,66 @@ class _FootballFieldDetailsScreenState
               priceLabel: s.t('hourlyPrice'),
               bookingLabel: s.t('bookNow'),
             ),
-      body: SafeArea(
-        bottom: field == null,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-              child: Row(
+      body: !_loading && _error == null && field != null
+          ? _DetailsContent(
+              field: field,
+              language: widget.controller.language,
+              pageTitle: s.t('fieldDetailsTitle'),
+              backLabel: s.t('back'),
+              onBack: () => Navigator.of(context).pop(),
+              onToggleFavorite: _toggleFavorite,
+              onOpenImage: () => _openFullScreenImage(field),
+              onOpenMap: () => _openExternalMap(field),
+              onCall: () => _callPhone(field),
+              onOpenAttribution: _openAttribution,
+              strings: s.t,
+            )
+          : SafeArea(
+              child: Column(
                 children: [
-                  IconButton(
-                    tooltip: s.t('back'),
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: IconButton.styleFrom(
-                      minimumSize: const Size(48, 48),
-                      backgroundColor: AppColors.primary.withValues(alpha: .10),
-                      foregroundColor: AppColors.primaryDark,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          tooltip: s.t('back'),
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: IconButton.styleFrom(
+                            minimumSize: const Size(48, 48),
+                            backgroundColor: AppColors.primary.withValues(
+                              alpha: .10,
+                            ),
+                            foregroundColor: AppColors.primaryDark,
+                          ),
+                          icon: const Icon(Icons.arrow_back_rounded),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text(
+                            s.t('fieldDetailsTitle'),
+                            style: const TextStyle(
+                              fontSize: 23,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -.55,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    icon: const Icon(Icons.arrow_back_rounded),
                   ),
-                  const SizedBox(width: 14),
                   Expanded(
-                    child: Text(
-                      s.t('fieldDetailsTitle'),
-                      style: const TextStyle(
-                        fontSize: 23,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -.55,
-                      ),
-                    ),
+                    child: _loading
+                        ? const Center(child: CircularProgressIndicator())
+                        : _DetailsError(
+                            message: _error!,
+                            text: s.t('tryAgainText'),
+                            retryLabel: s.t('tryAgain'),
+                            onRetry: _load,
+                          ),
                   ),
                 ],
               ),
             ),
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null
-                  ? _DetailsError(
-                      message: _error!,
-                      text: s.t('tryAgainText'),
-                      retryLabel: s.t('tryAgain'),
-                      onRetry: _load,
-                    )
-                  : _DetailsContent(
-                      field: field!,
-                      language: widget.controller.language,
-                      onOpenMap: () => _openExternalMap(field),
-                      onOpenAttribution: _openAttribution,
-                      strings: s.t,
-                    ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -187,14 +261,26 @@ class _DetailsContent extends StatelessWidget {
   const _DetailsContent({
     required this.field,
     required this.language,
+    required this.pageTitle,
+    required this.backLabel,
+    required this.onBack,
+    required this.onToggleFavorite,
+    required this.onOpenImage,
     required this.onOpenMap,
+    required this.onCall,
     required this.onOpenAttribution,
     required this.strings,
   });
 
   final FootballField field;
   final String language;
+  final String pageTitle;
+  final String backLabel;
+  final VoidCallback onBack;
+  final VoidCallback onToggleFavorite;
+  final VoidCallback onOpenImage;
   final VoidCallback onOpenMap;
+  final VoidCallback onCall;
   final VoidCallback onOpenAttribution;
   final String Function(String key) strings;
 
@@ -215,15 +301,22 @@ class _DetailsContent extends StatelessWidget {
         parent: AlwaysScrollableScrollPhysics(),
       ),
       slivers: [
+        SliverToBoxAdapter(
+          child: _ImmersiveHero(
+            imageUrl: resolveApiUrl(field.image?.url ?? ''),
+            heroTag: 'football-field-image-${field.id}',
+            isFavorite: field.isFavorite,
+            pageTitle: pageTitle,
+            backLabel: backLabel,
+            onBack: onBack,
+            onToggleFavorite: onToggleFavorite,
+            onOpenImage: onOpenImage,
+          ),
+        ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
           sliver: SliverList.list(
             children: [
-              _HeroImage(
-                imageUrl: resolveApiUrl(field.image?.url ?? ''),
-                isFavorite: field.isFavorite,
-              ),
-              const SizedBox(height: 18),
               Text(
                 name.isEmpty ? '—' : name,
                 style: const TextStyle(
@@ -315,12 +408,10 @@ class _DetailsContent extends StatelessWidget {
               const SizedBox(height: 22),
               _SectionTitle(title: strings('contact')),
               const SizedBox(height: 10),
-              _SurfaceCard(
-                child: _DetailRow(
-                  icon: Icons.phone_outlined,
-                  label: strings('phone'),
-                  value: field.phoneNumber.isEmpty ? '—' : field.phoneNumber,
-                ),
+              _PhoneContact(
+                label: strings('phone'),
+                phoneNumber: field.phoneNumber,
+                onTap: onCall,
               ),
               const SizedBox(height: 22),
               _SectionTitle(title: strings('location')),
@@ -341,65 +432,148 @@ class _DetailsContent extends StatelessWidget {
   }
 }
 
-class _HeroImage extends StatelessWidget {
-  const _HeroImage({required this.imageUrl, required this.isFavorite});
+class _ImmersiveHero extends StatelessWidget {
+  const _ImmersiveHero({
+    required this.imageUrl,
+    required this.heroTag,
+    required this.isFavorite,
+    required this.pageTitle,
+    required this.backLabel,
+    required this.onBack,
+    required this.onToggleFavorite,
+    required this.onOpenImage,
+  });
 
   final String imageUrl;
+  final String heroTag;
   final bool isFavorite;
+  final String pageTitle;
+  final String backLabel;
+  final VoidCallback onBack;
+  final VoidCallback onToggleFavorite;
+  final VoidCallback onOpenImage;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 220,
-      clipBehavior: Clip.hardEdge,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: .10),
-        borderRadius: BorderRadius.circular(26),
-      ),
+    final background = Theme.of(context).scaffoldBackgroundColor;
+    final topPadding = MediaQuery.paddingOf(context).top;
+    return SizedBox(
+      height: 315,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (imageUrl.isNotEmpty)
-            Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => const _HeroPlaceholder(),
-            )
-          else
-            const _HeroPlaceholder(),
-          const DecoratedBox(
+          Hero(
+            tag: heroTag,
+            child: imageUrl.isNotEmpty
+                ? Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const _HeroPlaceholder(),
+                  )
+                : const _HeroPlaceholder(),
+          ),
+          DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.transparent, Color(0x66000000)],
+                colors: [
+                  const Color(0x44000000),
+                  Colors.transparent,
+                  const Color(0x99000000),
+                  background,
+                ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
+                stops: const [0, .34, .73, 1],
               ),
             ),
           ),
           Positioned(
-            top: 14,
-            right: 14,
-            child: Container(
-              width: 43,
-              height: 43,
-              decoration: BoxDecoration(
-                color: isFavorite
-                    ? AppColors.primary
-                    : Colors.black.withValues(alpha: .30),
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withValues(alpha: .45)),
-              ),
-              child: Icon(
-                isFavorite
-                    ? Icons.bookmark_rounded
-                    : Icons.bookmark_border_rounded,
-                color: Colors.white,
-                size: 22,
-              ),
+            left: 16,
+            right: 16,
+            top: topPadding + 10,
+            child: Row(
+              children: [
+                _HeroActionButton(
+                  tooltip: backLabel,
+                  onPressed: onBack,
+                  icon: Icons.arrow_back_rounded,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    pageTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w900,
+                      shadows: [
+                        Shadow(color: Color(0x66000000), blurRadius: 10),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _HeroActionButton(
+                  tooltip: '',
+                  onPressed: onToggleFavorite,
+                  backgroundColor: isFavorite
+                      ? AppColors.primary
+                      : Colors.black.withValues(alpha: .34),
+                  icon: isFavorite
+                      ? Icons.bookmark_rounded
+                      : Icons.bookmark_border_rounded,
+                ),
+              ],
             ),
           ),
+          if (imageUrl.isNotEmpty)
+            Positioned(
+              right: 18,
+              bottom: 45,
+              child: IconButton(
+                onPressed: onOpenImage,
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(50, 50),
+                  backgroundColor: Colors.black.withValues(alpha: .38),
+                  foregroundColor: Colors.white,
+                  side: BorderSide(color: Colors.white.withValues(alpha: .22)),
+                ),
+                icon: const Icon(Icons.fullscreen_rounded, size: 28),
+              ),
+            ),
         ],
       ),
+    );
+  }
+}
+
+class _HeroActionButton extends StatelessWidget {
+  const _HeroActionButton({
+    required this.tooltip,
+    required this.onPressed,
+    required this.icon,
+    this.backgroundColor,
+  });
+
+  final String tooltip;
+  final VoidCallback? onPressed;
+  final IconData icon;
+  final Color? backgroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip.isEmpty ? null : tooltip,
+      onPressed: onPressed,
+      style: IconButton.styleFrom(
+        minimumSize: const Size(46, 46),
+        backgroundColor: backgroundColor ?? Colors.black.withValues(alpha: .34),
+        foregroundColor: Colors.white,
+        disabledForegroundColor: Colors.white,
+      ),
+      icon: Icon(icon),
     );
   }
 }
@@ -415,6 +589,58 @@ class _HeroPlaceholder extends StatelessWidget {
           : const Color(0xFFDDECE4),
       child: const Center(
         child: Icon(Icons.stadium_outlined, color: AppColors.primary, size: 62),
+      ),
+    );
+  }
+}
+
+class _FullScreenImage extends StatelessWidget {
+  const _FullScreenImage({
+    required this.imageUrl,
+    required this.heroTag,
+    required this.closeLabel,
+  });
+
+  final String imageUrl;
+  final String heroTag;
+  final String closeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          InteractiveViewer(
+            minScale: 1,
+            maxScale: 5,
+            child: Center(
+              child: Hero(
+                tag: heroTag,
+                child: Image.network(
+                  imageUrl,
+                  width: double.infinity,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => const Icon(
+                    Icons.broken_image_outlined,
+                    color: Colors.white54,
+                    size: 64,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            top: MediaQuery.paddingOf(context).top + 10,
+            child: _HeroActionButton(
+              tooltip: closeLabel,
+              onPressed: () => Navigator.of(context).pop(),
+              icon: Icons.close_rounded,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -644,6 +870,99 @@ class _SurfaceCard extends StatelessWidget {
         border: Border.all(color: scheme.outlineVariant.withValues(alpha: .55)),
       ),
       child: child,
+    );
+  }
+}
+
+class _PhoneContact extends StatelessWidget {
+  const _PhoneContact({
+    required this.label,
+    required this.phoneNumber,
+    required this.onTap,
+  });
+
+  final String label;
+  final String phoneNumber;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final available = phoneNumber.trim().isNotEmpty;
+    return Material(
+      color: scheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: .55)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: available ? onTap : null,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: .11),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: const Icon(
+                  Icons.phone_outlined,
+                  color: AppColors.primaryDark,
+                  size: 21,
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      available ? phoneNumber : '—',
+                      style: TextStyle(
+                        color: available
+                            ? AppColors.primaryDark
+                            : scheme.onSurface,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        decoration: available
+                            ? TextDecoration.underline
+                            : TextDecoration.none,
+                        decorationColor: AppColors.primaryDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (available)
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryDark,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.call_rounded,
+                    color: Colors.white,
+                    size: 19,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -213,6 +213,14 @@ class _HomeScreenState extends State<HomeScreen>
         builder: (_) => FootballFieldDetailsScreen(
           controller: widget.controller,
           footballFieldId: field.id,
+          onFavoriteChanged: (isFavorite) {
+            if (!mounted) return;
+            final index = _fields.indexWhere((item) => item.id == field.id);
+            if (index < 0) return;
+            setState(() {
+              _fields[index] = _fields[index].copyWith(isFavorite: isFavorite);
+            });
+          },
         ),
       ),
     );
