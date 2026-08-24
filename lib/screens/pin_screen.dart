@@ -24,6 +24,15 @@ class _PinScreenState extends State<PinScreen> {
   bool _checking = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future<void>.delayed(const Duration(milliseconds: 220));
+      if (mounted) _showPinKeyboard();
+    });
+  }
+
+  @override
   void dispose() {
     _pin.dispose();
     _pinFocus.dispose();
@@ -78,6 +87,12 @@ class _PinScreenState extends State<PinScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AppToast.successFromRoot(successMessage);
     });
+  }
+
+  void _showPinKeyboard() {
+    _pinFocus.requestFocus();
+    _pin.selection = TextSelection.collapsed(offset: _pin.text.length);
+    SystemChannels.textInput.invokeMethod<void>('TextInput.show');
   }
 
   @override
@@ -135,6 +150,7 @@ class _PinScreenState extends State<PinScreen> {
                 controller: _pin,
                 focusNode: _pinFocus,
                 onChanged: _handle,
+                onTap: _showPinKeyboard,
               ),
               const SizedBox(height: 28),
               if (!widget.create)
@@ -165,11 +181,13 @@ class _PinCodeFields extends StatelessWidget {
     required this.controller,
     required this.focusNode,
     required this.onChanged,
+    required this.onTap,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
   final ValueChanged<String> onChanged;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -209,13 +227,7 @@ class _PinCodeFields extends StatelessWidget {
               textField: true,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  focusNode.requestFocus();
-                  controller.selection = TextSelection.collapsed(
-                    offset: controller.text.length,
-                  );
-                  SystemChannels.textInput.invokeMethod<void>('TextInput.show');
-                },
+                onTap: onTap,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(4, (index) {
