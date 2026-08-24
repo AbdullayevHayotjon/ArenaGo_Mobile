@@ -8,6 +8,7 @@ import '../services/football_field_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/field_search_bar.dart';
+import 'football_field_details_screen.dart';
 import 'home_screen.dart';
 
 class FavoriteFieldsScreen extends StatefulWidget {
@@ -179,6 +180,17 @@ class _FavoriteFieldsScreenState extends State<FavoriteFieldsScreen> {
     }
   }
 
+  void _openDetails(FootballField field) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => FootballFieldDetailsScreen(
+          controller: widget.controller,
+          footballFieldId: field.id,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = widget.controller.strings;
@@ -308,6 +320,7 @@ class _FavoriteFieldsScreenState extends State<FavoriteFieldsScreen> {
                         language: widget.controller.language,
                         favoriteBusy: _removeRequests.contains(field.id),
                         onFavoritePressed: () => _removeFavorite(field),
+                        onPressed: () => _openDetails(field),
                       );
                     },
                   ),

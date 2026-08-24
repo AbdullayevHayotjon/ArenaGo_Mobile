@@ -104,4 +104,45 @@ void main() {
     expect(page.totalCount, 0);
     expect(page.hasNextPage, isFalse);
   });
+
+  test('loads football field details by id', () async {
+    final httpClient = MockClient((request) async {
+      expect(request.method, 'GET');
+      expect(request.url.path, endsWith('/api/football-fields/field-1'));
+      expect(request.headers['accept'], 'text/plain');
+      return http.Response.bytes(
+        utf8.encode(
+          jsonEncode({
+            'id': 'field-1',
+            'ownerAdminId': 'admin-1',
+            'name': {'uz': 'Maydon', 'ru': 'Поле'},
+            'description': {'uz': 'Tavsif', 'ru': 'Описание'},
+            'address': {'uz': 'Manzil', 'ru': 'Адрес'},
+            'location': {'latitude': 41.323794, 'longitude': 69.417868},
+            'phoneNumber': '+998900000000',
+            'opensAt': '08:00:00',
+            'closesAt': '23:00:00',
+            'hourlyPrice': 120000,
+            'prepaymentPercent': 15,
+            'prepaymentAmount': 18000,
+            'currency': 'UZS',
+            'image': null,
+            'isActive': true,
+            'createdAt': '2026-08-24T10:00:00',
+            'updatedAt': '2026-08-24T10:00:00',
+            'isFavorite': false,
+          }),
+        ),
+        200,
+      );
+    });
+
+    final service = FootballFieldService(ApiClient(client: httpClient));
+    final field = await service.getById('field-1');
+
+    expect(field.id, 'field-1');
+    expect(field.location.latitude, 41.323794);
+    expect(field.location.longitude, 69.417868);
+    expect(field.name.value('ru'), 'Поле');
+  });
 }

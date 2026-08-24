@@ -34,6 +34,25 @@ class FootballFieldService {
     );
   }
 
+  Future<FootballField> getById(String footballFieldId) async {
+    final response = await _apiClient.request(
+      'GET',
+      '/football-fields/${Uri.encodeComponent(footballFieldId)}',
+      headers: const {'accept': 'text/plain'},
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw FootballFieldException(statusCode: response.statusCode);
+    }
+
+    try {
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      if (json is! Map<String, dynamic>) throw const FormatException();
+      return FootballField.fromJson(json);
+    } on FormatException {
+      throw const FootballFieldException(code: 'invalid_response');
+    }
+  }
+
   Future<FootballFieldPage> _getPage(
     String path, {
     String? search,

@@ -10,6 +10,7 @@ import '../services/football_field_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/field_search_bar.dart';
+import 'football_field_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -206,6 +207,17 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  void _openDetails(FootballField field) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => FootballFieldDetailsScreen(
+          controller: widget.controller,
+          footballFieldId: field.id,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = widget.controller.strings;
@@ -328,6 +340,7 @@ class _HomeScreenState extends State<HomeScreen>
                     language: widget.controller.language,
                     favoriteBusy: _favoriteRequests.contains(_fields[index].id),
                     onFavoritePressed: () => _toggleFavorite(_fields[index]),
+                    onPressed: () => _openDetails(_fields[index]),
                   ),
                 ),
               ),
@@ -554,12 +567,14 @@ class FootballFieldCard extends StatelessWidget {
     required this.language,
     required this.favoriteBusy,
     required this.onFavoritePressed,
+    required this.onPressed,
   });
 
   final FootballField field;
   final String language;
   final bool favoriteBusy;
   final VoidCallback onFavoritePressed;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -573,215 +588,218 @@ class FootballFieldCard extends StatelessWidget {
         ? (language == 'ru' ? 'сум' : 'so‘m')
         : field.currency;
 
-    return Container(
-      clipBehavior: Clip.hardEdge,
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: dark ? .45 : .55),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: dark ? .18 : .055),
-            blurRadius: 22,
-            offset: const Offset(0, 9),
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        clipBehavior: Clip.hardEdge,
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: dark ? .45 : .55),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: 145,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _FieldImage(url: imageUrl),
-                const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.transparent, Color(0x88000000)],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: [.55, 1],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: dark ? .18 : .055),
+              blurRadius: 22,
+              offset: const Offset(0, 9),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 145,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _FieldImage(url: imageUrl),
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.transparent, Color(0x88000000)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: [.55, 1],
+                      ),
                     ),
                   ),
-                ),
-                Positioned(
-                  right: 12,
-                  top: 12,
-                  child: GestureDetector(
-                    onTap: favoriteBusy ? null : onFavoritePressed,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: field.isFavorite
-                            ? AppColors.primary
-                            : Colors.black.withValues(alpha: .28),
-                        shape: BoxShape.circle,
-                        border: Border.all(
+                  Positioned(
+                    right: 12,
+                    top: 12,
+                    child: GestureDetector(
+                      onTap: favoriteBusy ? null : onFavoritePressed,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
                           color: field.isFavorite
-                              ? Colors.white.withValues(alpha: .55)
-                              : Colors.white.withValues(alpha: .24),
+                              ? AppColors.primary
+                              : Colors.black.withValues(alpha: .28),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: field.isFavorite
+                                ? Colors.white.withValues(alpha: .55)
+                                : Colors.white.withValues(alpha: .24),
+                          ),
+                        ),
+                        child: Icon(
+                          field.isFavorite
+                              ? Icons.bookmark_rounded
+                              : Icons.bookmark_border_rounded,
+                          color: Colors.white,
+                          size: 21,
                         ),
                       ),
-                      child: Icon(
-                        field.isFavorite
-                            ? Icons.bookmark_rounded
-                            : Icons.bookmark_border_rounded,
-                        color: Colors.white,
-                        size: 21,
-                      ),
                     ),
                   ),
-                ),
-                Positioned(
-                  left: 15,
-                  right: 15,
-                  bottom: 13,
-                  child: Row(
+                  Positioned(
+                    left: 15,
+                    right: 15,
+                    bottom: 13,
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.schedule_rounded,
+                          color: Colors.white,
+                          size: 17,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${_shortTime(field.opensAt)} – ${_shortTime(field.closesAt)}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 13, 16, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name.isEmpty ? '—' : name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -.25,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
                     children: [
                       const Icon(
-                        Icons.schedule_rounded,
-                        color: Colors.white,
-                        size: 17,
+                        Icons.location_on_outlined,
+                        color: AppColors.primary,
+                        size: 18,
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        '${_shortTime(field.opensAt)} – ${_shortTime(field.closesAt)}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w800,
+                      Expanded(
+                        child: Text(
+                          address.isEmpty ? '—' : address,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 13, 16, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name.isEmpty ? '—' : name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -.25,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      color: AppColors.primary,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        address.isEmpty ? '—' : address,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: scheme.onSurfaceVariant,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  if (description.isNotEmpty) ...[
+                    const SizedBox(height: 7),
+                    Text(
+                      description,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                        height: 1.4,
                       ),
                     ),
                   ],
-                ),
-                if (description.isNotEmpty) ...[
-                  const SizedBox(height: 7),
-                  Text(
-                    description,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: scheme.onSurfaceVariant,
-                      fontSize: 12.5,
-                      height: 1.4,
-                    ),
+                  const SizedBox(height: 11),
+                  Divider(height: 1, color: scheme.outlineVariant),
+                  const SizedBox(height: 11),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              language == 'ru' ? 'Цена за час' : 'Soatlik narx',
+                              style: TextStyle(
+                                color: scheme.onSurfaceVariant,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text.rich(
+                              TextSpan(
+                                text: _formatNumber(field.hourlyPrice),
+                                children: [
+                                  TextSpan(
+                                    text: ' $currency',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              style: const TextStyle(
+                                color: AppColors.primaryDark,
+                                fontSize: 19,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: .10),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          language == 'ru'
+                              ? 'Предоплата ${_formatNumber(field.prepaymentAmount)} $currency'
+                              : 'Oldindan ${_formatNumber(field.prepaymentAmount)} $currency',
+                          style: const TextStyle(
+                            color: AppColors.primaryDark,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-                const SizedBox(height: 11),
-                Divider(height: 1, color: scheme.outlineVariant),
-                const SizedBox(height: 11),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            language == 'ru' ? 'Цена за час' : 'Soatlik narx',
-                            style: TextStyle(
-                              color: scheme.onSurfaceVariant,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text.rich(
-                            TextSpan(
-                              text: _formatNumber(field.hourlyPrice),
-                              children: [
-                                TextSpan(
-                                  text: ' $currency',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            style: const TextStyle(
-                              color: AppColors.primaryDark,
-                              fontSize: 19,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 7,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: .10),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        language == 'ru'
-                            ? 'Предоплата ${_formatNumber(field.prepaymentAmount)} $currency'
-                            : 'Oldindan ${_formatNumber(field.prepaymentAmount)} $currency',
-                        style: const TextStyle(
-                          color: AppColors.primaryDark,
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
