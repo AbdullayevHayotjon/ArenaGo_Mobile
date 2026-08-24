@@ -9,6 +9,7 @@ import '../services/api_config.dart';
 import '../services/football_field_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
+import '../widgets/field_search_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -250,25 +251,12 @@ class _HomeScreenState extends State<HomeScreen>
                       },
                     ),
                     const SizedBox(height: 22),
-                    TextField(
+                    FieldSearchBar(
                       controller: _searchController,
+                      hintText: s.t('searchFields'),
+                      clearTooltip: s.t('clearSearch'),
                       onChanged: _onSearchChanged,
-                      textInputAction: TextInputAction.search,
-                      decoration: InputDecoration(
-                        hintText: s.t('searchFields'),
-                        prefixIcon: const Icon(Icons.search_rounded),
-                        suffixIcon: ListenableBuilder(
-                          listenable: _searchController,
-                          builder: (context, _) =>
-                              _searchController.text.isEmpty
-                              ? const SizedBox.shrink()
-                              : IconButton(
-                                  onPressed: _clearSearch,
-                                  tooltip: s.t('clearSearch'),
-                                  icon: const Icon(Icons.close_rounded),
-                                ),
-                        ),
-                      ),
+                      onClear: _clearSearch,
                     ),
                     const SizedBox(height: 24),
                     Row(
@@ -605,7 +593,7 @@ class FootballFieldCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            height: 178,
+            height: 145,
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -677,7 +665,7 @@ class FootballFieldCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(17, 16, 17, 17),
+            padding: const EdgeInsets.fromLTRB(16, 13, 16, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -686,12 +674,12 @@ class FootballFieldCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 19,
+                    fontSize: 18,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -.25,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Row(
                   children: [
                     const Icon(
@@ -715,10 +703,10 @@ class FootballFieldCard extends StatelessWidget {
                   ],
                 ),
                 if (description.isNotEmpty) ...[
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 7),
                   Text(
                     description,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: scheme.onSurfaceVariant,
@@ -727,9 +715,9 @@ class FootballFieldCard extends StatelessWidget {
                     ),
                   ),
                 ],
-                const SizedBox(height: 15),
+                const SizedBox(height: 11),
                 Divider(height: 1, color: scheme.outlineVariant),
-                const SizedBox(height: 14),
+                const SizedBox(height: 11),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -856,7 +844,7 @@ class _FieldsLoading extends StatelessWidget {
       children: List.generate(
         3,
         (index) => Container(
-          height: 310,
+          height: 260,
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,

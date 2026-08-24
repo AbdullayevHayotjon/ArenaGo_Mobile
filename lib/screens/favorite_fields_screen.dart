@@ -7,6 +7,7 @@ import '../models/football_field.dart';
 import '../services/football_field_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
+import '../widgets/field_search_bar.dart';
 import 'home_screen.dart';
 
 class FavoriteFieldsScreen extends StatefulWidget {
@@ -221,7 +222,7 @@ class _FavoriteFieldsScreenState extends State<FavoriteFieldsScreen> {
                                 Text(
                                   s.t('savedFieldsTitle'),
                                   style: const TextStyle(
-                                    fontSize: 27,
+                                    fontSize: 23,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: -.7,
                                   ),
@@ -261,25 +262,12 @@ class _FavoriteFieldsScreenState extends State<FavoriteFieldsScreen> {
                         ],
                       ),
                       const SizedBox(height: 22),
-                      TextField(
+                      FieldSearchBar(
                         controller: _searchController,
+                        hintText: s.t('searchSavedFields'),
+                        clearTooltip: s.t('clearSearch'),
                         onChanged: _onSearchChanged,
-                        textInputAction: TextInputAction.search,
-                        decoration: InputDecoration(
-                          hintText: s.t('searchSavedFields'),
-                          prefixIcon: const Icon(Icons.search_rounded),
-                          suffixIcon: ListenableBuilder(
-                            listenable: _searchController,
-                            builder: (context, _) =>
-                                _searchController.text.isEmpty
-                                ? const SizedBox.shrink()
-                                : IconButton(
-                                    onPressed: _clearSearch,
-                                    tooltip: s.t('clearSearch'),
-                                    icon: const Icon(Icons.close_rounded),
-                                  ),
-                          ),
-                        ),
+                        onClear: _clearSearch,
                       ),
                       const SizedBox(height: 20),
                     ],
