@@ -7,7 +7,7 @@ import '../models/auth_session.dart';
 
 const apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://172.20.10.13:8080/api',
+  defaultValue: 'http://172.29.90.122:8080/api',
 );
 
 class AuthException implements Exception {

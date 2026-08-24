@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -75,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const ArenaLogo(size: 38),
+                      const ArenaLogo(size: 38, animate: true),
                       PreferenceButtons(controller: widget.controller),
                     ],
                   ),
@@ -182,8 +184,59 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class _PitchHero extends StatelessWidget {
+class _PitchHero extends StatefulWidget {
   const _PitchHero();
+
+  @override
+  State<_PitchHero> createState() => _PitchHeroState();
+}
+
+class _PitchHeroState extends State<_PitchHero> with TickerProviderStateMixin {
+  late final AnimationController _centerFloat = _repeatingController(
+    const Duration(milliseconds: 3200),
+  );
+  late final AnimationController _centerSpin = _repeatingController(
+    const Duration(seconds: 8),
+  );
+  late final AnimationController _firstBall = _repeatingController(
+    const Duration(seconds: 7),
+  );
+  late final AnimationController _secondBall = _repeatingController(
+    const Duration(seconds: 9),
+  );
+
+  AnimationController _repeatingController(Duration duration) {
+    return AnimationController(vsync: this, duration: duration)..repeat();
+  }
+
+  List<AnimationController> get _controllers => [
+    _centerFloat,
+    _centerSpin,
+    _firstBall,
+    _secondBall,
+  ];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    for (final controller in _controllers) {
+      if (MediaQuery.of(context).disableAnimations) {
+        controller
+          ..stop()
+          ..value = 0;
+      } else if (!controller.isAnimating) {
+        controller.repeat();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -204,25 +257,121 @@ class _PitchHero extends StatelessWidget {
           ),
         ],
       ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned.fill(child: CustomPaint(painter: _PitchPainter())),
-          Container(
-            width: 84,
-            height: 84,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .10),
-              shape: BoxShape.circle,
-              boxShadow: const [
-                BoxShadow(color: Color(0x4474EDB5), blurRadius: 35),
+      clipBehavior: Clip.hardEdge,
+      child: LayoutBuilder(
+        builder: (context, constraints) => AnimatedBuilder(
+          animation: Listenable.merge(_controllers),
+          builder: (context, _) {
+            final floatPhase = math.sin(math.pi * _centerFloat.value);
+            final first = _sampleMotion(_firstBall.value, const [
+              _BallFrame(Offset.zero, 0),
+              _BallFrame(Offset(65, 35), 160 / 360),
+              _BallFrame(Offset(125, -15), 330 / 360),
+              _BallFrame(Offset(205, 45), 520 / 360),
+              _BallFrame(Offset.zero, 0),
+            ]);
+            final second = _sampleMotion(_secondBall.value, const [
+              _BallFrame(Offset.zero, 0),
+              _BallFrame(Offset(-155, 12), -420 / 360),
+              _BallFrame(Offset(-75, -45), -210 / 360),
+              _BallFrame(Offset.zero, 0),
+            ]);
+
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(child: CustomPaint(painter: _PitchPainter())),
+                Positioned(
+                  left: constraints.maxWidth * .08,
+                  top: constraints.maxHeight * .30,
+                  child: _MovingBall(size: 28, frame: first),
+                ),
+                Positioned(
+                  right: constraints.maxWidth * .10,
+                  bottom: constraints.maxHeight * .18,
+                  child: _MovingBall(size: 20, frame: second),
+                ),
+                Transform.translate(
+                  offset: Offset(0, -9 * floatPhase),
+                  child: Transform.scale(
+                    scale: 1 + (.04 * floatPhase),
+                    child: Transform.rotate(
+                      angle: _centerSpin.value * (350 / 360) * math.pi * 2,
+                      child: Container(
+                        width: 84,
+                        height: 84,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: .10),
+                          shape: BoxShape.circle,
+                          boxShadow: const [
+                            BoxShadow(color: Color(0x4474EDB5), blurRadius: 35),
+                          ],
+                        ),
+                        child: Image.asset('assets/images/logo.png'),
+                      ),
+                    ),
+                  ),
+                ),
               ],
-            ),
-            child: Image.asset('assets/images/logo.png'),
-          ),
-        ],
+            );
+          },
+        ),
       ),
+    );
+  }
+
+  _BallFrame _sampleMotion(double progress, List<_BallFrame> frames) {
+    final segmentCount = frames.length - 1;
+    final scaled = progress * segmentCount;
+    final index = scaled.floor().clamp(0, segmentCount - 1);
+    final localProgress = Curves.easeInOut.transform(scaled - index);
+    return _BallFrame.lerp(frames[index], frames[index + 1], localProgress);
+  }
+}
+
+class _MovingBall extends StatelessWidget {
+  const _MovingBall({required this.size, required this.frame});
+
+  final double size;
+  final _BallFrame frame;
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.translate(
+      offset: frame.offset,
+      child: Transform.rotate(
+        angle: frame.turns * math.pi * 2,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x66000000),
+                blurRadius: 8,
+                offset: Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Image.asset('assets/images/logo.png'),
+        ),
+      ),
+    );
+  }
+}
+
+class _BallFrame {
+  const _BallFrame(this.offset, this.turns);
+
+  final Offset offset;
+  final double turns;
+
+  static _BallFrame lerp(_BallFrame begin, _BallFrame end, double t) {
+    return _BallFrame(
+      Offset.lerp(begin.offset, end.offset, t)!,
+      begin.turns + ((end.turns - begin.turns) * t),
     );
   }
 }
