@@ -8,7 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/auth_session.dart';
 
 class SessionStorage {
-  static const _secure = FlutterSecureStorage(aOptions: AndroidOptions());
+  static const _secure = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
   static const _sessionKey = 'arenago_auth_session';
   static const _pinHashKey = 'arenago_pin_hash';
   static const _pinSaltKey = 'arenago_pin_salt';
