@@ -44,8 +44,6 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     if (error != null) {
       AppToast.error(context, error);
-    } else {
-      AppToast.success(context, widget.controller.strings.t('loginSuccess'));
     }
   }
 

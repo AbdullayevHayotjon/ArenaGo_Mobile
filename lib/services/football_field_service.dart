@@ -38,6 +38,25 @@ class FootballFieldService {
       throw const FootballFieldException(code: 'invalid_response');
     }
   }
+
+  Future<void> addToFavorites(String footballFieldId) {
+    return _changeFavorite('POST', footballFieldId);
+  }
+
+  Future<void> removeFromFavorites(String footballFieldId) {
+    return _changeFavorite('DELETE', footballFieldId);
+  }
+
+  Future<void> _changeFavorite(String method, String footballFieldId) async {
+    final response = await _apiClient.request(
+      method,
+      '/me/favorite-fields/${Uri.encodeComponent(footballFieldId)}',
+      headers: const {'accept': '*/*'},
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw FootballFieldException(statusCode: response.statusCode);
+    }
+  }
 }
 
 class FootballFieldException implements Exception {

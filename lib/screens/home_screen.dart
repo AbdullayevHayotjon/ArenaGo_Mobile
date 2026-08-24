@@ -8,6 +8,7 @@ import '../models/football_field.dart';
 import '../services/api_config.dart';
 import '../services/football_field_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_toast.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.controller});
@@ -29,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen>
   late final AnimationController _ballController;
 
   final List<FootballField> _fields = [];
+  final Set<String> _favoriteRequests = {};
   Timer? _searchDebounce;
   Timer? _bannerTimer;
   String? _loadError;
@@ -160,6 +162,42 @@ class _HomeScreenState extends State<HomeScreen>
     _searchController.clear();
     FocusScope.of(context).unfocus();
     _loadFirstPage();
+  }
+
+  Future<void> _toggleFavorite(FootballField field) async {
+    if (_favoriteRequests.contains(field.id)) return;
+    final index = _fields.indexWhere((item) => item.id == field.id);
+    if (index < 0) return;
+
+    final wasFavorite = _fields[index].isFavorite;
+    setState(() {
+      _favoriteRequests.add(field.id);
+      _fields[index] = _fields[index].copyWith(isFavorite: !wasFavorite);
+    });
+
+    try {
+      if (wasFavorite) {
+        await _footballFieldService.removeFromFavorites(field.id);
+      } else {
+        await _footballFieldService.addToFavorites(field.id);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      final currentIndex = _fields.indexWhere((item) => item.id == field.id);
+      if (currentIndex >= 0) {
+        setState(() {
+          _fields[currentIndex] = _fields[currentIndex].copyWith(
+            isFavorite: wasFavorite,
+          );
+        });
+      }
+      AppToast.error(
+        context,
+        widget.controller.strings.t('favoriteUpdateError'),
+      );
+    } finally {
+      if (mounted) setState(() => _favoriteRequests.remove(field.id));
+    }
   }
 
   @override
@@ -294,6 +332,8 @@ class _HomeScreenState extends State<HomeScreen>
                   itemBuilder: (context, index) => FootballFieldCard(
                     field: _fields[index],
                     language: widget.controller.language,
+                    favoriteBusy: _favoriteRequests.contains(_fields[index].id),
+                    onFavoritePressed: () => _toggleFavorite(_fields[index]),
                   ),
                 ),
               ),
@@ -513,10 +553,14 @@ class FootballFieldCard extends StatelessWidget {
     super.key,
     required this.field,
     required this.language,
+    required this.favoriteBusy,
+    required this.onFavoritePressed,
   });
 
   final FootballField field;
   final String language;
+  final bool favoriteBusy;
+  final VoidCallback onFavoritePressed;
 
   @override
   Widget build(BuildContext context) {
@@ -568,26 +612,30 @@ class FootballFieldCard extends StatelessWidget {
                 Positioned(
                   right: 12,
                   top: 12,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: field.isFavorite
-                          ? AppColors.primary
-                          : Colors.black.withValues(alpha: .28),
-                      shape: BoxShape.circle,
-                      border: Border.all(
+                  child: GestureDetector(
+                    onTap: favoriteBusy ? null : onFavoritePressed,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
                         color: field.isFavorite
-                            ? Colors.white.withValues(alpha: .55)
-                            : Colors.white.withValues(alpha: .24),
+                            ? AppColors.primary
+                            : Colors.black.withValues(alpha: .28),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: field.isFavorite
+                              ? Colors.white.withValues(alpha: .55)
+                              : Colors.white.withValues(alpha: .24),
+                        ),
                       ),
-                    ),
-                    child: Icon(
-                      field.isFavorite
-                          ? Icons.bookmark_rounded
-                          : Icons.bookmark_border_rounded,
-                      color: Colors.white,
-                      size: 21,
+                      child: Icon(
+                        field.isFavorite
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_border_rounded,
+                        color: Colors.white,
+                        size: 21,
+                      ),
                     ),
                   ),
                 ),

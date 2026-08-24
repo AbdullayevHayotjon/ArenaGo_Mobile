@@ -56,9 +56,6 @@ class _PinScreenState extends State<PinScreen> {
         if (mounted) AppToast.error(context, message);
       } else {
         await widget.controller.createPin(value);
-        if (mounted) {
-          AppToast.success(context, widget.controller.strings.t('pinCreated'));
-        }
       }
     } else {
       final valid = await widget.controller.unlock(value);
@@ -68,8 +65,6 @@ class _PinScreenState extends State<PinScreen> {
           _checking = false;
         });
         AppToast.error(context, widget.controller.strings.t('pinWrong'));
-      } else if (mounted) {
-        AppToast.success(context, widget.controller.strings.t('loginSuccess'));
       }
     }
   }

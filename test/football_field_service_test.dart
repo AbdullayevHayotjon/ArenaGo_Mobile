@@ -63,4 +63,23 @@ void main() {
     expect(page.totalCount, 25);
     expect(page.hasNextPage, isFalse);
   });
+
+  test(
+    'adds and removes a football field favorite without reloading',
+    () async {
+      final methods = <String>[];
+      final httpClient = MockClient((request) async {
+        methods.add(request.method);
+        expect(request.url.path, endsWith('/api/me/favorite-fields/field-1'));
+        expect(request.headers['accept'], '*/*');
+        return http.Response('', 204);
+      });
+
+      final service = FootballFieldService(ApiClient(client: httpClient));
+      await service.addToFavorites('field-1');
+      await service.removeFromFavorites('field-1');
+
+      expect(methods, ['POST', 'DELETE']);
+    },
+  );
 }

@@ -77,6 +77,7 @@ class AppStrings {
       'tryAgainText': 'Internet aloqasini tekshirib, qayta urinib ko‘ring.',
       'tryAgain': 'Qayta urinish',
       'allFieldsLoaded': 'Barcha maydonlar ko‘rsatildi',
+      'favoriteUpdateError': 'Saqlanganlar holatini o‘zgartirib bo‘lmadi.',
     },
     'ru': {
       'welcome': 'Добро пожаловать!',
@@ -148,6 +149,7 @@ class AppStrings {
       'tryAgainText': 'Проверьте подключение к интернету и попробуйте снова.',
       'tryAgain': 'Повторить',
       'allFieldsLoaded': 'Все поля показаны',
+      'favoriteUpdateError': 'Не удалось изменить сохранённое состояние.',
     },
   };
 

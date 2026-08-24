@@ -121,6 +121,29 @@ class FootballField {
   final String createdAt;
   final String updatedAt;
   final bool isFavorite;
+
+  FootballField copyWith({bool? isFavorite}) {
+    return FootballField(
+      id: id,
+      ownerAdminId: ownerAdminId,
+      name: name,
+      description: description,
+      address: address,
+      location: location,
+      phoneNumber: phoneNumber,
+      opensAt: opensAt,
+      closesAt: closesAt,
+      hourlyPrice: hourlyPrice,
+      prepaymentPercent: prepaymentPercent,
+      prepaymentAmount: prepaymentAmount,
+      currency: currency,
+      image: image,
+      isActive: isActive,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      isFavorite: isFavorite ?? this.isFavorite,
+    );
+  }
 }
 
 class FootballFieldPage {
