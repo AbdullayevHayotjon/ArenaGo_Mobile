@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../controllers/app_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/arena_logo.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/preference_buttons.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -111,7 +112,10 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 22),
             OutlinedButton.icon(
-              onPressed: controller.logout,
+              onPressed: () {
+                AppToast.success(context, s.t('logoutSuccess'));
+                controller.logout();
+              },
               icon: const Icon(Icons.logout),
               label: Text(s.t('logout')),
               style: OutlinedButton.styleFrom(

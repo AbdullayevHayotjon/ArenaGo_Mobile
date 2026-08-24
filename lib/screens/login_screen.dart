@@ -2,10 +2,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../controllers/app_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/arena_logo.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/preference_buttons.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -34,29 +36,41 @@ class _LoginScreenState extends State<LoginScreen> {
     if (digits.length != 12 ||
         !digits.startsWith('998') ||
         _password.text.isEmpty) {
-      _showError(widget.controller.strings.t('invalidForm'));
+      AppToast.error(context, widget.controller.strings.t('invalidForm'));
       return;
     }
     final error = await widget.controller.login(digits, _password.text);
-    if (mounted && error != null) _showError(error);
+    if (!mounted) return;
+    if (error != null) {
+      AppToast.error(context, error);
+    } else {
+      AppToast.success(context, widget.controller.strings.t('loginSuccess'));
+    }
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 10),
-              Expanded(child: Text(message)),
-            ],
-          ),
-          backgroundColor: AppColors.danger,
-          behavior: SnackBarBehavior.floating,
-        ),
+  Future<void> _openRegistration() async {
+    final telegramApp = Uri.parse('tg://resolve?domain=ArenaGoSportBot');
+    final telegramWeb = Uri.parse('https://t.me/ArenaGoSportBot');
+    try {
+      final openedInTelegram = await launchUrl(
+        telegramApp,
+        mode: LaunchMode.externalNonBrowserApplication,
       );
+      if (openedInTelegram) return;
+    } catch (_) {
+      // Telegram o‘rnatilmagan bo‘lsa, quyidagi web havola ishlatiladi.
+    }
+    try {
+      final openedInBrowser = await launchUrl(
+        telegramWeb,
+        mode: LaunchMode.externalApplication,
+      );
+      if (openedInBrowser || !mounted) return;
+    } catch (_) {
+      if (!mounted) return;
+    }
+    if (!mounted) return;
+    AppToast.error(context, widget.controller.strings.t('telegramOpenError'));
   }
 
   @override
@@ -173,6 +187,34 @@ class _LoginScreenState extends State<LoginScreen> {
                               const Icon(Icons.arrow_forward, size: 19),
                             ],
                           ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          s.t('noAccount'),
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: _openRegistration,
+                        icon: const Icon(Icons.send_rounded, size: 17),
+                        label: Text(s.t('register')),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.primaryDark,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

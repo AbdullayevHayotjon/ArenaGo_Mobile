@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../controllers/app_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/arena_logo.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/preference_buttons.dart';
 
 class PinScreen extends StatefulWidget {
@@ -18,7 +19,6 @@ class PinScreen extends StatefulWidget {
 class _PinScreenState extends State<PinScreen> {
   final _pin = TextEditingController();
   String? _firstPin;
-  String? _error;
   bool _checking = false;
 
   @override
@@ -35,27 +35,32 @@ class _PinScreenState extends State<PinScreen> {
         setState(() {
           _firstPin = value;
           _pin.clear();
-          _error = null;
           _checking = false;
         });
       } else if (_firstPin != value) {
+        final message = widget.controller.strings.t('pinMismatch');
         setState(() {
           _firstPin = null;
           _pin.clear();
-          _error = widget.controller.strings.t('pinMismatch');
           _checking = false;
         });
+        if (mounted) AppToast.error(context, message);
       } else {
         await widget.controller.createPin(value);
+        if (mounted) {
+          AppToast.success(context, widget.controller.strings.t('pinCreated'));
+        }
       }
     } else {
       final valid = await widget.controller.unlock(value);
       if (mounted && !valid) {
         setState(() {
           _pin.clear();
-          _error = widget.controller.strings.t('pinWrong');
           _checking = false;
         });
+        AppToast.error(context, widget.controller.strings.t('pinWrong'));
+      } else if (mounted) {
+        AppToast.success(context, widget.controller.strings.t('loginSuccess'));
       }
     }
   }
@@ -143,26 +148,13 @@ class _PinScreenState extends State<PinScreen> {
                   ),
                 ),
               ),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
-                child: _error == null
-                    ? const SizedBox(height: 43)
-                    : Padding(
-                        padding: const EdgeInsets.only(top: 14),
-                        child: Text(
-                          _error!,
-                          key: ValueKey(_error),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColors.danger,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-              ),
+              const SizedBox(height: 28),
               if (!widget.create)
                 TextButton.icon(
-                  onPressed: widget.controller.logout,
+                  onPressed: () {
+                    AppToast.success(context, s.t('logoutSuccess'));
+                    widget.controller.logout();
+                  },
                   icon: const Icon(Icons.logout, size: 18),
                   label: Text(s.t('logout')),
                 ),
