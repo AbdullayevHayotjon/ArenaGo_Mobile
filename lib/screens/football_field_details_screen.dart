@@ -9,6 +9,7 @@ import '../services/api_config.dart';
 import '../services/football_field_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
+import 'booking_time_screen.dart';
 
 class FootballFieldDetailsScreen extends StatefulWidget {
   const FootballFieldDetailsScreen({
@@ -179,6 +180,15 @@ class _FootballFieldDetailsScreenState
     );
   }
 
+  void _openBooking(FootballField field) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            BookingTimeScreen(controller: widget.controller, field: field),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = widget.controller.strings;
@@ -192,6 +202,7 @@ class _FootballFieldDetailsScreenState
               language: widget.controller.language,
               priceLabel: s.t('hourlyPrice'),
               bookingLabel: s.t('bookNow'),
+              onPressed: () => _openBooking(field),
             ),
       body: !_loading && _error == null && field != null
           ? SafeArea(
@@ -1043,12 +1054,14 @@ class _BookingBar extends StatelessWidget {
     required this.language,
     required this.priceLabel,
     required this.bookingLabel,
+    required this.onPressed,
   });
 
   final FootballField field;
   final String language;
   final String priceLabel;
   final String bookingLabel;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -1100,7 +1113,7 @@ class _BookingBar extends StatelessWidget {
             SizedBox(
               width: 152,
               child: FilledButton.icon(
-                onPressed: () {},
+                onPressed: onPressed,
                 icon: const Icon(Icons.calendar_month_outlined, size: 20),
                 label: Text(bookingLabel),
               ),
