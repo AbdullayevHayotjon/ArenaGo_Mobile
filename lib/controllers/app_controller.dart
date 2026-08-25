@@ -4,13 +4,18 @@ import '../l10n/app_strings.dart';
 import '../models/auth_session.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
+import '../services/biometric_service.dart';
 import '../services/session_storage.dart';
 
 enum AppStage { login, createPin, unlock, home }
 
 class AppController extends ChangeNotifier {
-  AppController({AuthService? authService, SessionStorage? storage})
-    : _storage = storage ?? SessionStorage() {
+  AppController({
+    AuthService? authService,
+    SessionStorage? storage,
+    BiometricService? biometricService,
+  }) : _storage = storage ?? SessionStorage(),
+       _biometricService = biometricService ?? BiometricService() {
     _apiClient = ApiClient(
       sessionProvider: () => session,
       onSessionRefreshed: _saveRefreshedSession,
@@ -20,6 +25,7 @@ class AppController extends ChangeNotifier {
   }
 
   final SessionStorage _storage;
+  final BiometricService _biometricService;
   late final ApiClient _apiClient;
   late final AuthService _authService;
   AuthSession? session;
@@ -69,17 +75,40 @@ class AppController extends ChangeNotifier {
 
   Future<void> createPin(String pin) async {
     await _storage.savePin(pin);
-    stage = AppStage.home;
-    notifyListeners();
   }
+
+  Future<bool> canUseBiometrics() => _biometricService.isAvailable();
+
+  Future<bool> isBiometricEnabled() => _storage.readBiometricEnabled();
+
+  Future<void> setBiometricEnabled(bool value) =>
+      _storage.saveBiometricEnabled(value);
+
+  Future<bool> authenticateWithBiometrics() async {
+    if (!await _storage.readBiometricEnabled()) return false;
+    if (!await _biometricService.isAvailable()) return false;
+    return _biometricService.authenticate(strings.t('biometricReason'));
+  }
+
+  Future<bool> confirmBiometricSetup() async {
+    if (!await _biometricService.isAvailable()) return false;
+    return _biometricService.authenticate(strings.t('biometricReason'));
+  }
+
+  Future<void> completePinSetup() => _enterHome();
+
+  Future<void> unlockWithBiometrics() => _enterHome();
 
   Future<bool> unlock(String pin) async {
     final valid = await _storage.verifyPin(pin);
-    if (valid) {
-      stage = AppStage.home;
-      notifyListeners();
-    }
+    if (valid) await _enterHome();
     return valid;
+  }
+
+  Future<void> _enterHome() async {
+    await Future<void>.delayed(const Duration(milliseconds: 420));
+    stage = AppStage.home;
+    notifyListeners();
   }
 
   Future<String?> logout() async {

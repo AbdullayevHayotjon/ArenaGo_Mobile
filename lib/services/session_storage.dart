@@ -14,6 +14,7 @@ class SessionStorage {
   static const _sessionKey = 'arenago_auth_session';
   static const _pinHashKey = 'arenago_pin_hash';
   static const _pinSaltKey = 'arenago_pin_salt';
+  static const _biometricEnabledKey = 'arenago_biometric_enabled';
 
   Future<AuthSession?> readSession() async {
     final raw = await _secure.read(key: _sessionKey);
@@ -50,6 +51,12 @@ class SessionStorage {
     return salt != null && savedHash != null && _hash(pin, salt) == savedHash;
   }
 
+  Future<bool> readBiometricEnabled() async =>
+      (await _secure.read(key: _biometricEnabledKey)) == 'true';
+
+  Future<void> saveBiometricEnabled(bool value) =>
+      _secure.write(key: _biometricEnabledKey, value: value ? 'true' : 'false');
+
   String _hash(String pin, String salt) =>
       sha256.convert(utf8.encode('$salt:$pin:ArenaGo')).toString();
 
@@ -58,6 +65,7 @@ class SessionStorage {
       _secure.delete(key: _sessionKey),
       _secure.delete(key: _pinHashKey),
       _secure.delete(key: _pinSaltKey),
+      _secure.delete(key: _biometricEnabledKey),
     ]);
   }
 

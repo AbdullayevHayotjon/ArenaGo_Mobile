@@ -20,12 +20,19 @@ class _PinScreenState extends State<PinScreen> {
   final _pinFocus = FocusNode();
   String? _firstPin;
   bool _checking = false;
+  bool _openingApp = false;
+  bool _biometricAvailable = false;
+  bool _biometricRunning = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _ensurePinKeyboardIsVisible();
+      if (widget.create) {
+        _ensurePinKeyboardIsVisible();
+      } else {
+        _initializeUnlock();
+      }
     });
   }
 
@@ -55,17 +62,104 @@ class _PinScreenState extends State<PinScreen> {
         });
         if (mounted) AppToast.error(context, message);
       } else {
+        _hideKeyboard();
+        setState(() => _openingApp = true);
         await widget.controller.createPin(value);
+        if (!mounted) return;
+        await _offerBiometrics();
+        await widget.controller.completePinSetup();
       }
     } else {
+      _hideKeyboard();
+      setState(() => _openingApp = true);
       final valid = await widget.controller.unlock(value);
       if (mounted && !valid) {
         setState(() {
           _pin.clear();
           _checking = false;
+          _openingApp = false;
         });
         AppToast.error(context, widget.controller.strings.t('pinWrong'));
+        _ensurePinKeyboardIsVisible();
       }
+    }
+  }
+
+  Future<void> _initializeUnlock() async {
+    final enabled = await widget.controller.isBiometricEnabled();
+    final available = enabled && await widget.controller.canUseBiometrics();
+    if (!mounted) return;
+    setState(() => _biometricAvailable = available);
+    if (available) {
+      await _authenticateBiometrically(showFailure: false);
+    } else {
+      await _ensurePinKeyboardIsVisible();
+    }
+  }
+
+  Future<void> _authenticateBiometrically({required bool showFailure}) async {
+    if (_biometricRunning || _openingApp) return;
+    _hideKeyboard();
+    setState(() => _biometricRunning = true);
+    final authenticated = await widget.controller.authenticateWithBiometrics();
+    if (!mounted) return;
+    if (authenticated) {
+      setState(() {
+        _biometricRunning = false;
+        _openingApp = true;
+      });
+      await widget.controller.unlockWithBiometrics();
+      return;
+    }
+    setState(() => _biometricRunning = false);
+    if (showFailure) {
+      AppToast.info(context, widget.controller.strings.t('biometricFailed'));
+    }
+    await _ensurePinKeyboardIsVisible();
+  }
+
+  Future<void> _offerBiometrics() async {
+    if (!await widget.controller.canUseBiometrics() || !mounted) return;
+    final s = widget.controller.strings;
+    final accepted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        icon: Container(
+          width: 58,
+          height: 58,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: .12),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.fingerprint_rounded,
+            color: AppColors.primaryDark,
+            size: 32,
+          ),
+        ),
+        title: Text(s.t('enableBiometricsTitle')),
+        content: Text(s.t('enableBiometricsText'), textAlign: TextAlign.center),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(s.t('notNow')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(s.t('enableBiometrics')),
+          ),
+        ],
+      ),
+    );
+    if (accepted != true) {
+      await widget.controller.setBiometricEnabled(false);
+      return;
+    }
+    final authenticated = await widget.controller.confirmBiometricSetup();
+    await widget.controller.setBiometricEnabled(authenticated);
+    if (!authenticated && mounted) {
+      AppToast.info(context, s.t('biometricFailed'));
     }
   }
 
@@ -87,6 +181,11 @@ class _PinScreenState extends State<PinScreen> {
     SystemChannels.textInput.invokeMethod<void>('TextInput.show');
   }
 
+  void _hideKeyboard() {
+    _pinFocus.unfocus();
+    SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+  }
+
   Future<void> _ensurePinKeyboardIsVisible() async {
     for (var attempt = 0; attempt < 4; attempt++) {
       await Future<void>.delayed(
@@ -104,77 +203,152 @@ class _PinScreenState extends State<PinScreen> {
     final confirming = widget.create && _firstPin != null;
     final s = widget.controller.strings;
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 18, 22, 28),
-          child: Column(
-            children: [
-              Row(
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 18, 22, 28),
+              child: Column(
                 children: [
-                  if (widget.create)
-                    _PinActionButton(
-                      tooltip: s.t('backToLogin'),
-                      loading: widget.controller.logoutBusy,
-                      icon: Icons.arrow_back_rounded,
-                      onPressed: widget.controller.logoutBusy ? null : _logout,
-                    )
-                  else
-                    const SizedBox(width: 48),
+                  Row(
+                    children: [
+                      if (widget.create)
+                        _PinActionButton(
+                          tooltip: s.t('backToLogin'),
+                          loading: widget.controller.logoutBusy,
+                          icon: Icons.arrow_back_rounded,
+                          onPressed: widget.controller.logoutBusy
+                              ? null
+                              : _logout,
+                        )
+                      else
+                        const SizedBox(width: 48),
+                      const Spacer(),
+                      if (!widget.create)
+                        _PinActionButton(
+                          tooltip: s.t('logout'),
+                          loading: widget.controller.logoutBusy,
+                          icon: Icons.logout_rounded,
+                          foregroundColor: AppColors.danger,
+                          onPressed: widget.controller.logoutBusy
+                              ? null
+                              : _logout,
+                        )
+                      else
+                        const SizedBox(width: 48),
+                    ],
+                  ),
                   const Spacer(),
-                  if (!widget.create)
-                    _PinActionButton(
-                      tooltip: s.t('logout'),
-                      loading: widget.controller.logoutBusy,
-                      icon: Icons.logout_rounded,
-                      foregroundColor: AppColors.danger,
-                      onPressed: widget.controller.logoutBusy ? null : _logout,
-                    )
-                  else
-                    const SizedBox(width: 48),
+                  const FloatingFootball(
+                    size: 92,
+                    padding: 20,
+                    backgroundColor: Color(0x1F22A96F),
+                    shadowColor: Color(0x3322A96F),
+                    shadowBlurRadius: 28,
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    widget.create
+                        ? (confirming ? s.t('confirmPin') : s.t('createPin'))
+                        : s.t('unlock'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -.7,
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+                  Text(
+                    widget.create
+                        ? (confirming
+                              ? s.t('confirmPinText')
+                              : s.t('createPinText'))
+                        : s.t('unlockText'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  _PinCodeFields(
+                    controller: _pin,
+                    focusNode: _pinFocus,
+                    onChanged: _handle,
+                    onTap: _showPinKeyboard,
+                  ),
+                  if (!widget.create && _biometricAvailable) ...[
+                    const SizedBox(height: 20),
+                    TextButton.icon(
+                      onPressed: _biometricRunning || _checking
+                          ? null
+                          : () => _authenticateBiometrically(showFailure: true),
+                      icon: _biometricRunning
+                          ? const SizedBox(
+                              width: 19,
+                              height: 19,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.fingerprint_rounded),
+                      label: Text(s.t('useBiometrics')),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primaryDark,
+                        textStyle: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 28),
+                  const Spacer(flex: 2),
                 ],
               ),
-              const Spacer(),
-              const FloatingFootball(
-                size: 92,
-                padding: 20,
-                backgroundColor: Color(0x1F22A96F),
-                shadowColor: Color(0x3322A96F),
-                shadowBlurRadius: 28,
+            ),
+          ),
+          if (_openingApp)
+            Positioned.fill(child: _OpeningOverlay(text: s.t('openingApp'))),
+        ],
+      ),
+    );
+  }
+}
+
+class _OpeningOverlay extends StatelessWidget {
+  const _OpeningOverlay({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return ColoredBox(
+      color: (dark ? AppColors.darkBackground : AppColors.background)
+          .withValues(alpha: .97),
+      child: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 82,
+                height: 82,
+                padding: const EdgeInsets.all(25),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: .12),
+                  shape: BoxShape.circle,
+                ),
+                child: const CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: AppColors.primary,
+                ),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 20),
               Text(
-                widget.create
-                    ? (confirming ? s.t('confirmPin') : s.t('createPin'))
-                    : s.t('unlock'),
-                textAlign: TextAlign.center,
+                text,
                 style: const TextStyle(
-                  fontSize: 28,
+                  fontSize: 16,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: -.7,
                 ),
               ),
-              const SizedBox(height: 9),
-              Text(
-                widget.create
-                    ? (confirming
-                          ? s.t('confirmPinText')
-                          : s.t('createPinText'))
-                    : s.t('unlockText'),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: 30),
-              _PinCodeFields(
-                controller: _pin,
-                focusNode: _pinFocus,
-                onChanged: _handle,
-                onTap: _showPinKeyboard,
-              ),
-              const SizedBox(height: 28),
-              const Spacer(flex: 2),
             ],
           ),
         ),
