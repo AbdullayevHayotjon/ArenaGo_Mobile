@@ -100,9 +100,52 @@ class Booking {
   final double remainingAmount;
 }
 
+class BookingPage {
+  const BookingPage({
+    required this.items,
+    required this.pageNumber,
+    required this.pageSize,
+    required this.totalCount,
+    required this.totalPages,
+    required this.hasPreviousPage,
+    required this.hasNextPage,
+  });
+
+  factory BookingPage.fromJson(Map<String, dynamic> json) {
+    final rawItems = json['items'];
+    return BookingPage(
+      items: rawItems is List
+          ? rawItems
+                .whereType<Map<String, dynamic>>()
+                .map(Booking.fromJson)
+                .toList(growable: false)
+          : const [],
+      pageNumber: _asInt(json['pageNumber'], 1),
+      pageSize: _asInt(json['pageSize'], 20),
+      totalCount: _asInt(json['totalCount'], 0),
+      totalPages: _asInt(json['totalPages'], 0),
+      hasPreviousPage: json['hasPreviousPage'] == true,
+      hasNextPage: json['hasNextPage'] == true,
+    );
+  }
+
+  final List<Booking> items;
+  final int pageNumber;
+  final int pageSize;
+  final int totalCount;
+  final int totalPages;
+  final bool hasPreviousPage;
+  final bool hasNextPage;
+}
+
 double _asDouble(Object? value) {
   if (value is num) return value.toDouble();
   return double.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+int _asInt(Object? value, int fallback) {
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? fallback;
 }
 
 DateTime _asDateTime(Object? value) {

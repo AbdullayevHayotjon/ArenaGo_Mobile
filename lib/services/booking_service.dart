@@ -9,6 +9,40 @@ class BookingService {
 
   final ApiClient _apiClient;
 
+  Future<BookingPage> getBookings({
+    required String tab,
+    required int pageNumber,
+    int pageSize = 20,
+  }) async {
+    final query = Uri(
+      queryParameters: {
+        'Tab': tab,
+        'PageNumber': '$pageNumber',
+        'PageSize': '$pageSize',
+      },
+    ).query;
+    final response = await _apiClient.request(
+      'GET',
+      '/bookings?$query',
+      headers: const {'accept': 'text/plain'},
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw BookingException(
+        statusCode: response.statusCode,
+        message: _problemMessage(response.bodyBytes),
+      );
+    }
+
+    try {
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      if (json is! Map<String, dynamic>) throw const FormatException();
+      return BookingPage.fromJson(json);
+    } on FormatException {
+      throw const BookingException(code: 'invalid_response');
+    }
+  }
+
   Future<List<FieldAvailabilitySlot>> getAvailability({
     required String footballFieldId,
     required String from,

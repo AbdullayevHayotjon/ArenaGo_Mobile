@@ -7,6 +7,76 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  test('loads a paginated customer booking tab', () async {
+    final httpClient = MockClient((request) async {
+      expect(request.method, 'GET');
+      expect(request.url.path, endsWith('/api/bookings'));
+      expect(request.url.queryParameters, {
+        'Tab': 'active',
+        'PageNumber': '2',
+        'PageSize': '20',
+      });
+      expect(request.headers['accept'], 'text/plain');
+      return http.Response.bytes(
+        utf8.encode(
+          jsonEncode({
+            'items': [
+              {
+                'id': 'booking-2',
+                'bookingNumber': 'AG-BOOKING-2',
+                'footballFieldId': 'field-2',
+                'ownerAdminId': 'admin-1',
+                'customerId': 'customer-1',
+                'source': 'online',
+                'customerName': 'Foydalanuvchi',
+                'customerPhoneNumber': '+998900000000',
+                'bookingDate': '2026-08-26',
+                'startsAt': '15:00:00',
+                'endsAt': '16:00:00',
+                'status': 'pendingPayment',
+                'totalAmount': 200000,
+                'prepaymentAmount': 150000,
+                'collectedAmount': 0,
+                'currency': 'UZS',
+                'expiresAt': '2026-08-25T11:26:52.762545',
+                'createdAt': '2026-08-25T11:16:52.765803',
+                'field': {
+                  'id': 'field-2',
+                  'name': {'uz': 'Telebashniya', 'ru': 'Телебашня'},
+                  'address': {'uz': 'Manzil', 'ru': 'Адрес'},
+                  'image': null,
+                },
+                'remainingAmount': 200000,
+              },
+            ],
+            'pageNumber': 2,
+            'pageSize': 20,
+            'totalCount': 21,
+            'totalPages': 2,
+            'hasPreviousPage': true,
+            'hasNextPage': false,
+          }),
+        ),
+        200,
+      );
+    });
+
+    final service = BookingService(ApiClient(client: httpClient));
+    final page = await service.getBookings(
+      tab: 'active',
+      pageNumber: 2,
+      pageSize: 20,
+    );
+
+    expect(page.items, hasLength(1));
+    expect(page.items.single.bookingNumber, 'AG-BOOKING-2');
+    expect(page.items.single.status, 'pendingPayment');
+    expect(page.items.single.field.name.value('ru'), 'Телебашня');
+    expect(page.pageNumber, 2);
+    expect(page.totalCount, 21);
+    expect(page.hasNextPage, isFalse);
+  });
+
   test('loads availability using the same date query as the web app', () async {
     final httpClient = MockClient((request) async {
       expect(request.method, 'GET');

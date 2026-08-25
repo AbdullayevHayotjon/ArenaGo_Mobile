@@ -6,6 +6,7 @@ import '../controllers/app_controller.dart';
 import '../theme/app_theme.dart';
 import 'favorite_fields_screen.dart';
 import 'home_screen.dart';
+import 'orders_screen.dart';
 import 'profile_screen.dart';
 
 class MainShell extends StatefulWidget {
@@ -40,10 +41,9 @@ class _MainShellState extends State<MainShell> {
         title: s.t('navMap'),
         text: s.t('mapComingSoon'),
       ),
-      _ComingSoonScreen(
-        icon: Icons.receipt_long_outlined,
-        title: s.t('navOrders'),
-        text: s.t('ordersComingSoon'),
+      OrdersScreen(
+        controller: widget.controller,
+        isActive: _selectedIndex == 2,
       ),
       ProfileScreen(controller: widget.controller),
     ];
