@@ -375,8 +375,6 @@ class _BookingContent extends StatelessWidget {
                     booking.field.latitude,
                     booking.field.longitude,
                   ),
-                  latitudeLabel: strings('latitude'),
-                  longitudeLabel: strings('longitude'),
                   openMapLabel: strings('viewOnMap'),
                   onOpenMap: onOpenMap,
                   onOpenAttribution: onOpenAttribution,
@@ -829,15 +827,11 @@ class _PhoneCard extends StatelessWidget {
 class _MapCard extends StatelessWidget {
   const _MapCard({
     required this.coordinates,
-    required this.latitudeLabel,
-    required this.longitudeLabel,
     required this.openMapLabel,
     required this.onOpenMap,
     required this.onOpenAttribution,
   });
   final LatLng coordinates;
-  final String latitudeLabel;
-  final String longitudeLabel;
   final String openMapLabel;
   final VoidCallback onOpenMap;
   final VoidCallback onOpenAttribution;
@@ -909,80 +903,26 @@ class _MapCard extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(15),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _Coordinate(
-                        label: latitudeLabel,
-                        value: coordinates.latitude.toStringAsFixed(6),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _Coordinate(
-                        label: longitudeLabel,
-                        value: coordinates.longitude.toStringAsFixed(6),
-                      ),
-                    ),
-                  ],
+            child: OutlinedButton.icon(
+              onPressed: onOpenMap,
+              icon: const Icon(Icons.map_outlined),
+              label: Text(openMapLabel),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                foregroundColor: AppColors.primaryDark,
+                side: BorderSide(
+                  color: AppColors.primary.withValues(alpha: .45),
                 ),
-                const SizedBox(height: 13),
-                OutlinedButton.icon(
-                  onPressed: onOpenMap,
-                  icon: const Icon(Icons.map_outlined),
-                  label: Text(openMapLabel),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                    foregroundColor: AppColors.primaryDark,
-                    side: BorderSide(
-                      color: AppColors.primary.withValues(alpha: .45),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
-              ],
+              ),
             ),
           ),
         ],
       ),
     );
   }
-}
-
-class _Coordinate extends StatelessWidget {
-  const _Coordinate({required this.label, required this.value});
-  final String label;
-  final String value;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-    decoration: BoxDecoration(
-      color: AppColors.primary.withValues(alpha: .08),
-      borderRadius: BorderRadius.circular(13),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: 10.5,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-        ),
-      ],
-    ),
-  );
 }
 
 class _HeroPlaceholder extends StatelessWidget {

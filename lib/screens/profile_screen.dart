@@ -134,6 +134,19 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 26),
+          Center(
+            child: Text(
+              'ArenaGo  •  v1.0.0',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant
+                    .withValues(alpha: .72),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: .25,
+              ),
+            ),
+          ),
         ],
       ),
     );
