@@ -48,4 +48,66 @@ void main() {
     expect(slots.last.isAvailable, isFalse);
     expect(slots.first.timeKey, '08:00:00|09:00:00');
   });
+
+  test(
+    'creates an online booking with field, date and start time only',
+    () async {
+      final httpClient = MockClient((request) async {
+        expect(request.method, 'POST');
+        expect(request.url.path, endsWith('/api/bookings'));
+        expect(request.headers['accept'], 'text/plain');
+        expect(jsonDecode(request.body), {
+          'footballFieldId': 'field-1',
+          'date': '2026-08-25',
+          'startTime': '11:00:00.000',
+        });
+        return http.Response.bytes(
+          utf8.encode(
+            jsonEncode({
+              'id': 'booking-1',
+              'bookingNumber': 'AG-BOOKING-1',
+              'footballFieldId': 'field-1',
+              'ownerAdminId': 'admin-1',
+              'customerId': 'customer-1',
+              'source': 'online',
+              'customerName': 'Foydalanuvchi',
+              'customerPhoneNumber': '+998900000000',
+              'bookingDate': '2026-08-25',
+              'startsAt': '11:00:00',
+              'endsAt': '12:00:00',
+              'status': 'pendingPayment',
+              'totalAmount': 120000,
+              'prepaymentAmount': 18000,
+              'collectedAmount': 0,
+              'currency': 'UZS',
+              'expiresAt': '2026-08-25T10:41:20.1451407',
+              'createdAt': '2026-08-25T10:31:20.1628296',
+              'field': {
+                'id': 'field-1',
+                'name': {'uz': 'Maydon', 'ru': 'Поле'},
+                'address': {'uz': 'Manzil', 'ru': 'Адрес'},
+                'image': null,
+              },
+              'remainingAmount': 120000,
+            }),
+          ),
+          201,
+        );
+      });
+
+      final service = BookingService(ApiClient(client: httpClient));
+      final booking = await service.create(
+        footballFieldId: 'field-1',
+        date: '2026-08-25',
+        startTime: '11:00:00.000',
+      );
+
+      expect(booking.id, 'booking-1');
+      expect(booking.bookingNumber, 'AG-BOOKING-1');
+      expect(booking.endsAt, '12:00:00');
+      expect(booking.prepaymentAmount, 18000);
+      expect(booking.field.name.value('ru'), 'Поле');
+      expect(booking.expiresAt, DateTime.parse('2026-08-25T10:41:20.1451407'));
+    },
+  );
 }

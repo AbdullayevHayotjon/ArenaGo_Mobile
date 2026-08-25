@@ -5,6 +5,8 @@ import '../models/field_availability_slot.dart';
 import '../models/football_field.dart';
 import '../services/booking_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_toast.dart';
+import 'booking_result_screen.dart';
 
 class BookingTimeScreen extends StatefulWidget {
   const BookingTimeScreen({
@@ -28,6 +30,7 @@ class _BookingTimeScreenState extends State<BookingTimeScreen> {
   late DateTime _weekStart;
   int _requestGeneration = 0;
   bool _loading = true;
+  bool _creatingBooking = false;
   String? _error;
 
   @override
@@ -104,6 +107,50 @@ class _BookingTimeScreenState extends State<BookingTimeScreen> {
     });
   }
 
+  Future<void> _createBooking() async {
+    final slot = _selectedSlot;
+    if (slot == null || _creatingBooking) return;
+    setState(() => _creatingBooking = true);
+
+    try {
+      final booking = await _bookingService.create(
+        footballFieldId: widget.field.id,
+        date: slot.date,
+        startTime: _bookingStartTime(slot.startsAt),
+      );
+      if (!mounted) return;
+      final successMessage = widget.controller.strings.t('bookingCreatedToast');
+      setState(() => _creatingBooking = false);
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => BookingResultScreen(
+            controller: widget.controller,
+            booking: booking,
+          ),
+        ),
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        AppToast.successFromRoot(successMessage);
+      });
+    } on BookingException catch (error) {
+      if (!mounted) return;
+      setState(() => _creatingBooking = false);
+      AppToast.error(
+        context,
+        error.message?.isNotEmpty == true
+            ? error.message!
+            : widget.controller.strings.t('bookingCreateError'),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _creatingBooking = false);
+      AppToast.error(
+        context,
+        widget.controller.strings.t('bookingCreateError'),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = widget.controller.strings;
@@ -119,6 +166,8 @@ class _BookingTimeScreenState extends State<BookingTimeScreen> {
         selectHint: s.t('selectTimeFirst'),
         selectedLabel: s.t('selectedTime'),
         paymentLabel: s.t('continueToPayment'),
+        loading: _creatingBooking,
+        onPressed: _createBooking,
       ),
       body: SafeArea(
         bottom: false,
@@ -786,6 +835,8 @@ class _PaymentBar extends StatelessWidget {
     required this.selectHint,
     required this.selectedLabel,
     required this.paymentLabel,
+    required this.loading,
+    required this.onPressed,
   });
 
   final FieldAvailabilitySlot? slot;
@@ -793,6 +844,8 @@ class _PaymentBar extends StatelessWidget {
   final String selectHint;
   final String selectedLabel;
   final String paymentLabel;
+  final bool loading;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -852,8 +905,17 @@ class _PaymentBar extends StatelessWidget {
             SizedBox(
               width: 158,
               child: FilledButton.icon(
-                onPressed: slot == null ? null : () {},
-                icon: const Icon(Icons.payments_outlined, size: 19),
+                onPressed: slot == null || loading ? null : onPressed,
+                icon: loading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(Icons.payments_outlined, size: 19),
                 label: Text(paymentLabel),
               ),
             ),
@@ -966,6 +1028,14 @@ DateTime _parseDate(String value) {
 String _shortTime(String value) {
   final parts = value.split(':');
   return parts.length >= 2 ? '${parts[0]}:${parts[1]}' : value;
+}
+
+String _bookingStartTime(String value) {
+  final time = value.trim();
+  if (time.contains('.')) return time;
+  if (time.length >= 8) return '${time.substring(0, 8)}.000';
+  if (time.length == 5) return '$time:00.000';
+  return time;
 }
 
 String _dayMonth(DateTime date) {
