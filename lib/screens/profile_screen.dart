@@ -32,21 +32,49 @@ class ProfileScreen extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 22, 20, 126),
         children: [
-          Text(
-            s.t('profileTitle'),
-            style: const TextStyle(
-              fontSize: 29,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -.8,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            s.t('profileSubtitle'),
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              height: 1.4,
-            ),
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: .12),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const Icon(
+                  Icons.person_rounded,
+                  color: AppColors.primaryDark,
+                  size: 25,
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      s.t('profileTitle'),
+                      style: const TextStyle(
+                        fontSize: 27,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -.7,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      s.t('profileSubtitle'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 22),
           _ProfileCard(

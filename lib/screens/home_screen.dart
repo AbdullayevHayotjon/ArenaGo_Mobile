@@ -388,13 +388,28 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
+        Container(
+          width: 46,
+          height: 46,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: .12),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: const Icon(
+            Icons.home_rounded,
+            color: AppColors.primaryDark,
+            size: 25,
+          ),
+        ),
+        const SizedBox(width: 13),
         Expanded(
           child: Text(
             title,
             style: const TextStyle(
-              fontSize: 29,
+              fontSize: 27,
               fontWeight: FontWeight.w800,
-              letterSpacing: -.8,
+              letterSpacing: -.7,
             ),
           ),
         ),
