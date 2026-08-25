@@ -51,6 +51,8 @@
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ArenaGo sizga yaqin futbol maydonlarini xaritada ko‘rsatish uchun joylashuvingizdan foydalanadi.</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>UISupportedInterfaceOrientations</key>

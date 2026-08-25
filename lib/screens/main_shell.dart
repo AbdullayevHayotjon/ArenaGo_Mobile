@@ -6,6 +6,7 @@ import '../controllers/app_controller.dart';
 import '../theme/app_theme.dart';
 import 'favorite_fields_screen.dart';
 import 'home_screen.dart';
+import 'map_screen.dart';
 import 'orders_screen.dart';
 import 'profile_screen.dart';
 
@@ -36,11 +37,7 @@ class _MainShellState extends State<MainShell> {
           );
         },
       ),
-      _ComingSoonScreen(
-        icon: Icons.map_outlined,
-        title: s.t('navMap'),
-        text: s.t('mapComingSoon'),
-      ),
+      MapScreen(controller: widget.controller, isActive: _selectedIndex == 1),
       OrdersScreen(
         controller: widget.controller,
         isActive: _selectedIndex == 2,
@@ -212,79 +209,4 @@ class _NavigationItem {
   final IconData icon;
   final IconData selectedIcon;
   final String label;
-}
-
-class _ComingSoonScreen extends StatelessWidget {
-  const _ComingSoonScreen({
-    required this.icon,
-    required this.title,
-    required this.text,
-  });
-
-  final IconData icon;
-  final String title;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 22, 20, 124),
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: .12),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Icon(icon, color: AppColors.primaryDark, size: 25),
-              ),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 27,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -.7,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      text,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 80),
-          Center(
-            child: Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: .11),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 40, color: AppColors.primary),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

@@ -8,6 +8,29 @@ class FootballFieldService {
 
   final ApiClient _apiClient;
 
+  Future<List<FootballFieldMapLocation>> getLocations() async {
+    final response = await _apiClient.request(
+      'GET',
+      '/admin/football-fields/locations',
+      headers: const {'accept': 'text/plain'},
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw FootballFieldException(statusCode: response.statusCode);
+    }
+
+    try {
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      if (json is! List) throw const FormatException();
+      return json
+          .whereType<Map<String, dynamic>>()
+          .map(FootballFieldMapLocation.fromJson)
+          .where((location) => location.hasValidCoordinates)
+          .toList(growable: false);
+    } on FormatException {
+      throw const FootballFieldException(code: 'invalid_response');
+    }
+  }
+
   Future<FootballFieldPage> getList({
     String? search,
     required int pageNumber,

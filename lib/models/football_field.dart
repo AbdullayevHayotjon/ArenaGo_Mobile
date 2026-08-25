@@ -41,6 +41,34 @@ class FootballFieldLocation {
   final double longitude;
 }
 
+class FootballFieldMapLocation {
+  const FootballFieldMapLocation({
+    required this.id,
+    required this.latitude,
+    required this.longitude,
+  });
+
+  factory FootballFieldMapLocation.fromJson(Map<String, dynamic> json) {
+    return FootballFieldMapLocation(
+      id: json['id']?.toString() ?? '',
+      latitude: _asDouble(json['latitude']),
+      longitude: _asDouble(json['longitude']),
+    );
+  }
+
+  final String id;
+  final double latitude;
+  final double longitude;
+
+  bool get hasValidCoordinates =>
+      id.isNotEmpty &&
+      latitude >= -90 &&
+      latitude <= 90 &&
+      longitude >= -180 &&
+      longitude <= 180 &&
+      (latitude != 0 || longitude != 0);
+}
+
 class FootballFieldImage {
   const FootballFieldImage({required this.id, required this.url});
 

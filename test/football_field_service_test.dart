@@ -7,6 +7,32 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  test('loads valid football field map locations', () async {
+    final client = MockClient((request) async {
+      expect(request.method, 'GET');
+      expect(
+        request.url.path,
+        endsWith('/api/admin/football-fields/locations'),
+      );
+      expect(request.headers['accept'], 'text/plain');
+      return http.Response(
+        jsonEncode([
+          {'id': 'field-1', 'latitude': 41.323794, 'longitude': 69.417868},
+          {'id': '', 'latitude': 0, 'longitude': 0},
+        ]),
+        200,
+      );
+    });
+
+    final service = FootballFieldService(ApiClient(client: client));
+    final locations = await service.getLocations();
+
+    expect(locations, hasLength(1));
+    expect(locations.single.id, 'field-1');
+    expect(locations.single.latitude, 41.323794);
+    expect(locations.single.longitude, 69.417868);
+  });
+
   test('loads and parses a localized football field page', () async {
     final httpClient = MockClient((request) async {
       expect(request.url.path, endsWith('/api/football-fields'));
