@@ -288,6 +288,11 @@ class _BookingContent extends StatelessWidget {
                       ? strings('bookingExpiredText')
                       : strings('paymentTimeHint'),
                 ),
+                const SizedBox(height: 16),
+                _AdminNotice(
+                  title: strings('adminConfirmationTitle'),
+                  text: strings('adminConfirmationText'),
+                ),
               ],
               const SizedBox(height: 23),
               _SectionTitle(title: strings('bookingInformation')),
@@ -544,6 +549,61 @@ class _CountdownCard extends StatelessWidget {
                     ),
                   ),
                 ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AdminNotice extends StatelessWidget {
+  const _AdminNotice({required this.title, required this.text});
+
+  final String title;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(17),
+      decoration: BoxDecoration(
+        color: const Color(0xFF3478D4).withValues(alpha: .09),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFF3478D4).withValues(alpha: .22),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.support_agent_rounded,
+            color: Color(0xFF3478D4),
+            size: 25,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  text,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12.5,
+                    height: 1.45,
+                  ),
+                ),
               ],
             ),
           ),
