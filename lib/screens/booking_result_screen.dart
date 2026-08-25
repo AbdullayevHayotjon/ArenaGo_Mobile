@@ -125,6 +125,11 @@ class _BookingResultScreenState extends State<BookingResultScreen> {
                         ? s.t('bookingExpiredText')
                         : s.t('paymentTimeHint'),
                   ),
+                  const SizedBox(height: 16),
+                  _AdminNotice(
+                    title: s.t('adminConfirmationTitle'),
+                    text: s.t('adminConfirmationText'),
+                  ),
                   const SizedBox(height: 22),
                   _SectionTitle(title: s.t('bookingInformation')),
                   const SizedBox(height: 10),
@@ -182,11 +187,6 @@ class _BookingResultScreenState extends State<BookingResultScreen> {
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  _AdminNotice(
-                    title: s.t('adminConfirmationTitle'),
-                    text: s.t('adminConfirmationText'),
                   ),
                 ],
               ),
