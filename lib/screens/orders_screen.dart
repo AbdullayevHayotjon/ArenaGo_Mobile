@@ -6,6 +6,7 @@ import '../services/api_config.dart';
 import '../services/booking_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
+import 'booking_details_screen.dart';
 
 enum _OrdersTab { active, history }
 
@@ -151,6 +152,17 @@ class _OrdersScreenState extends State<OrdersScreen> {
     }
   }
 
+  void _openDetails(Booking booking) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BookingDetailsScreen(
+          controller: widget.controller,
+          bookingId: booking.id,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = widget.controller.strings;
@@ -263,6 +275,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     booking: _bookings[index],
                     language: language,
                     controller: widget.controller,
+                    onTap: () => _openDetails(_bookings[index]),
                   ),
                 ),
               ),
@@ -405,11 +418,13 @@ class _BookingCard extends StatelessWidget {
     required this.booking,
     required this.language,
     required this.controller,
+    required this.onTap,
   });
 
   final Booking booking;
   final String language;
   final AppController controller;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -423,160 +438,169 @@ class _BookingCard extends StatelessWidget {
         ? (language == 'ru' ? 'сум' : 'so‘m')
         : booking.currency;
 
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: dark
-              ? Colors.white.withValues(alpha: .07)
-              : const Color(0xFFE5EBE8),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: dark ? .18 : .055),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: dark
+                  ? Colors.white.withValues(alpha: .07)
+                  : const Color(0xFFE5EBE8),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: dark ? .18 : .055),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          SizedBox(
-            height: 126,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  width: 116,
-                  child: imageUrl.isEmpty
-                      ? const _ImagePlaceholder()
-                      : Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => const _ImagePlaceholder(),
-                        ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 13, 13, 11),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+          child: Column(
+            children: [
+              SizedBox(
+                height: 126,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(
+                      width: 116,
+                      child: imageUrl.isEmpty
+                          ? const _ImagePlaceholder()
+                          : Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  const _ImagePlaceholder(),
+                            ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 13, 13, 11),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Text(
-                                fieldName.isEmpty ? '—' : fieldName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -.25,
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    fieldName.isEmpty ? '—' : fieldName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -.25,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: 7),
+                                _StatusBadge(status: status),
+                              ],
                             ),
-                            const SizedBox(width: 7),
-                            _StatusBadge(status: status),
-                          ],
-                        ),
-                        const SizedBox(height: 7),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              size: 15,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                address.isEmpty ? '—' : address,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
+                            const SizedBox(height: 7),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on_outlined,
+                                  size: 15,
                                   color: scheme.onSurfaceVariant,
-                                  fontSize: 12.5,
                                 ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    address.isEmpty ? '—' : address,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: scheme.onSurfaceVariant,
+                                      fontSize: 12.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            Row(
+                              children: [
+                                _CompactInfo(
+                                  icon: Icons.calendar_today_outlined,
+                                  text: _displayDate(booking.bookingDate),
+                                ),
+                                const SizedBox(width: 13),
+                                _CompactInfo(
+                                  icon: Icons.schedule_rounded,
+                                  text:
+                                      '${_shortTime(booking.startsAt)}–${_shortTime(booking.endsAt)}',
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 9),
+                            Text(
+                              booking.bookingNumber,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: scheme.onSurfaceVariant,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: .15,
                               ),
                             ),
                           ],
                         ),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            _CompactInfo(
-                              icon: Icons.calendar_today_outlined,
-                              text: _displayDate(booking.bookingDate),
-                            ),
-                            const SizedBox(width: 13),
-                            _CompactInfo(
-                              icon: Icons.schedule_rounded,
-                              text:
-                                  '${_shortTime(booking.startsAt)}–${_shortTime(booking.endsAt)}',
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 9),
-                        Text(
-                          booking.bookingNumber,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: scheme.onSurfaceVariant,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: .15,
-                          ),
-                        ),
-                      ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.fromLTRB(14, 11, 14, 12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: dark ? .07 : .045),
+                  border: Border(
+                    top: BorderSide(
+                      color: dark
+                          ? Colors.white.withValues(alpha: .06)
+                          : const Color(0xFFE9EEEB),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 11, 14, 12),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: dark ? .07 : .045),
-              border: Border(
-                top: BorderSide(
-                  color: dark
-                      ? Colors.white.withValues(alpha: .06)
-                      : const Color(0xFFE9EEEB),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _AmountInfo(
+                        label: controller.strings.t('totalAmount'),
+                        value:
+                            '${_formatNumber(booking.totalAmount)} $currency',
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 31,
+                      color: scheme.outlineVariant.withValues(alpha: .75),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: _AmountInfo(
+                        label: controller.strings.t('remainingAmount'),
+                        value:
+                            '${_formatNumber(booking.remainingAmount)} $currency',
+                        alignEnd: true,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _AmountInfo(
-                    label: controller.strings.t('totalAmount'),
-                    value: '${_formatNumber(booking.totalAmount)} $currency',
-                  ),
-                ),
-                Container(
-                  width: 1,
-                  height: 31,
-                  color: scheme.outlineVariant.withValues(alpha: .75),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: _AmountInfo(
-                    label: controller.strings.t('remainingAmount'),
-                    value:
-                        '${_formatNumber(booking.remainingAmount)} $currency',
-                    alignEnd: true,
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

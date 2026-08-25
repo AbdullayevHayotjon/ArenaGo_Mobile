@@ -9,6 +9,29 @@ class BookingService {
 
   final ApiClient _apiClient;
 
+  Future<Booking> getById(String bookingId) async {
+    final response = await _apiClient.request(
+      'GET',
+      '/bookings/${Uri.encodeComponent(bookingId)}',
+      headers: const {'accept': 'text/plain'},
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw BookingException(
+        statusCode: response.statusCode,
+        message: _problemMessage(response.bodyBytes),
+      );
+    }
+
+    try {
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      if (json is! Map<String, dynamic>) throw const FormatException();
+      return Booking.fromJson(json);
+    } on FormatException {
+      throw const BookingException(code: 'invalid_response');
+    }
+  }
+
   Future<BookingPage> getBookings({
     required String tab,
     required int pageNumber,

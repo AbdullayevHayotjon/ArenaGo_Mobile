@@ -165,6 +165,12 @@ class AppStrings {
       'orderStatusExpired': 'Muddati tugagan',
       'orderStatusUnknown': 'Holati noma’lum',
       'remainingAmount': 'Qolgan to‘lov',
+      'bookingDetailsTitle': 'Buyurtma haqida',
+      'bookingDetailsLoadError': 'Buyurtma ma’lumotlarini yuklab bo‘lmadi',
+      'bookingStatus': 'Buyurtma holati',
+      'paidAmount': 'To‘langan summa',
+      'fieldContact': 'Maydon administratori',
+      'fieldLocation': 'Maydon joylashuvi',
     },
     'ru': {
       'welcome': 'Добро пожаловать!',
@@ -323,6 +329,12 @@ class AppStrings {
       'orderStatusExpired': 'Срок истёк',
       'orderStatusUnknown': 'Статус неизвестен',
       'remainingAmount': 'Остаток к оплате',
+      'bookingDetailsTitle': 'О заказе',
+      'bookingDetailsLoadError': 'Не удалось загрузить данные заказа',
+      'bookingStatus': 'Статус заказа',
+      'paidAmount': 'Оплаченная сумма',
+      'fieldContact': 'Администратор поля',
+      'fieldLocation': 'Расположение поля',
     },
   };
 

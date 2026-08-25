@@ -5,6 +5,9 @@ class BookingFieldSummary {
     required this.id,
     required this.name,
     required this.address,
+    required this.phoneNumber,
+    required this.latitude,
+    required this.longitude,
     required this.image,
   });
 
@@ -17,6 +20,9 @@ class BookingFieldSummary {
       id: data['id']?.toString() ?? '',
       name: LocalizedText.fromJson(data['name']),
       address: LocalizedText.fromJson(data['address']),
+      phoneNumber: data['phoneNumber']?.toString() ?? '',
+      latitude: _asDouble(data['latitude']),
+      longitude: _asDouble(data['longitude']),
       image: imageJson is Map<String, dynamic>
           ? FootballFieldImage.fromJson(imageJson)
           : null,
@@ -26,7 +32,17 @@ class BookingFieldSummary {
   final String id;
   final LocalizedText name;
   final LocalizedText address;
+  final String phoneNumber;
+  final double latitude;
+  final double longitude;
   final FootballFieldImage? image;
+
+  bool get hasValidCoordinates =>
+      latitude >= -90 &&
+      latitude <= 90 &&
+      longitude >= -180 &&
+      longitude <= 180 &&
+      (latitude != 0 || longitude != 0);
 }
 
 class Booking {

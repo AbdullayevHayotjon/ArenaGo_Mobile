@@ -7,6 +7,58 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  test('loads a booking detail with field contact and coordinates', () async {
+    final httpClient = MockClient((request) async {
+      expect(request.method, 'GET');
+      expect(request.url.path, endsWith('/api/bookings/booking-detail-1'));
+      expect(request.headers['accept'], 'text/plain');
+      return http.Response.bytes(
+        utf8.encode(
+          jsonEncode({
+            'id': 'booking-detail-1',
+            'bookingNumber': 'AG-DETAIL-1',
+            'footballFieldId': 'field-1',
+            'ownerAdminId': 'admin-1',
+            'customerId': 'customer-1',
+            'source': 'online',
+            'customerName': 'Foydalanuvchi',
+            'customerPhoneNumber': '+998900000000',
+            'bookingDate': '2026-08-25',
+            'startsAt': '15:00:00',
+            'endsAt': '16:00:00',
+            'status': 'pendingPayment',
+            'totalAmount': 160000,
+            'prepaymentAmount': 32000,
+            'collectedAmount': 0,
+            'currency': 'UZS',
+            'expiresAt': '2026-08-25T13:42:10.036959',
+            'createdAt': '2026-08-25T13:32:10.039098',
+            'field': {
+              'id': 'field-1',
+              'name': {'uz': 'Maydon', 'ru': 'Поле'},
+              'address': {'uz': 'Manzil', 'ru': 'Адрес'},
+              'phoneNumber': '+998913096062',
+              'latitude': 41.320799,
+              'longitude': 69.425138,
+              'image': null,
+            },
+            'remainingAmount': 160000,
+          }),
+        ),
+        200,
+      );
+    });
+
+    final service = BookingService(ApiClient(client: httpClient));
+    final booking = await service.getById('booking-detail-1');
+
+    expect(booking.bookingNumber, 'AG-DETAIL-1');
+    expect(booking.field.phoneNumber, '+998913096062');
+    expect(booking.field.latitude, 41.320799);
+    expect(booking.field.longitude, 69.425138);
+    expect(booking.field.hasValidCoordinates, isTrue);
+  });
+
   test('loads a paginated customer booking tab', () async {
     final httpClient = MockClient((request) async {
       expect(request.method, 'GET');
