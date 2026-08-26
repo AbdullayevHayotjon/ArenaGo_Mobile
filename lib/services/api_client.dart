@@ -42,6 +42,7 @@ class ApiClient {
     Object? body,
     bool authenticated = true,
     String? accessTokenOverride,
+    Duration timeout = const Duration(seconds: 20),
   }) async {
     final firstToken = authenticated
         ? accessTokenOverride ?? _sessionProvider()?.accessToken
@@ -52,6 +53,7 @@ class ApiClient {
       headers: headers,
       body: body,
       accessToken: firstToken,
+      timeout: timeout,
     );
 
     if (!authenticated || firstResponse.statusCode != 401) {
@@ -73,6 +75,7 @@ class ApiClient {
       headers: headers,
       body: body,
       accessToken: refreshedSession.accessToken,
+      timeout: timeout,
     );
     if (retryResponse.statusCode == 401) await _expireSession();
     return retryResponse;
@@ -84,6 +87,7 @@ class ApiClient {
     Map<String, String>? headers,
     Object? body,
     String? accessToken,
+    Duration timeout = const Duration(seconds: 20),
   }) async {
     final request = http.Request(method, Uri.parse('$apiBaseUrl$path'));
     request.headers.addAll({
@@ -96,9 +100,7 @@ class ApiClient {
     if (body != null) {
       request.body = body is String ? body : jsonEncode(body);
     }
-    final streamedResponse = await _client
-        .send(request)
-        .timeout(const Duration(seconds: 20));
+    final streamedResponse = await _client.send(request).timeout(timeout);
     return http.Response.fromStream(streamedResponse);
   }
 

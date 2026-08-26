@@ -3,6 +3,17 @@ const apiBaseUrl = String.fromEnvironment(
   defaultValue: 'http://172.29.90.122:8080/api',
 );
 
+const androidStoreUrl = String.fromEnvironment(
+  'ANDROID_STORE_URL',
+  defaultValue:
+      'https://play.google.com/store/apps/details?id=uz.arenago.arenago',
+);
+
+const iosStoreUrl = String.fromEnvironment(
+  'IOS_STORE_URL',
+  defaultValue: 'https://apps.apple.com/search?term=ArenaGo',
+);
+
 String resolveApiUrl(String path) {
   if (path.trim().isEmpty) return '';
   final parsed = Uri.tryParse(path);

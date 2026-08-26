@@ -24,6 +24,13 @@ class AppStrings {
       'customerOnly': 'Siz faqat ArenaGo web ilovasi orqali foydalana olasiz.',
       'networkError':
           'Serverga ulanib bo‘lmadi. Internet va server manzilini tekshiring.',
+      'forceUpdateTitle': 'Yangi versiya mavjud',
+      'forceUpdateText': 'ArenaGo’dan foydalanishni davom ettirish uchun ilovani yangilashingiz kerak.',
+      'installedVersion': 'O‘rnatilgan versiya',
+      'updateNow': 'Yangilash',
+      'checkingVersion': 'Tekshirilmoqda...',
+      'storeOpenError':
+          'Ilovalar do‘konini ochib bo‘lmadi. Qayta urinib ko‘ring.',
       'loginError': 'Tizimga kirishda xatolik yuz berdi.',
       'createPin': 'PIN-kod yarating',
       'createPinText': 'Ilovaga keyingi kirishlar uchun 4 xonali PIN kiriting.',
@@ -197,6 +204,13 @@ class AppStrings {
       'invalidForm': 'Правильно введите номер телефона и пароль.',
       'customerOnly': 'Вы можете пользоваться только веб-приложением ArenaGo.',
       'networkError': 'Не удалось подключиться к серверу. Проверьте интернет и адрес сервера.',
+      'forceUpdateTitle': 'Доступна новая версия',
+      'forceUpdateText': 'Чтобы продолжить пользоваться ArenaGo, необходимо обновить приложение.',
+      'installedVersion': 'Установленная версия',
+      'updateNow': 'Обновить',
+      'checkingVersion': 'Проверка...',
+      'storeOpenError':
+          'Не удалось открыть магазин приложений. Попробуйте снова.',
       'loginError': 'Произошла ошибка при входе в систему.',
       'createPin': 'Создайте PIN-код',
       'createPinText': 'Введите 4-значный PIN для последующих входов.',
