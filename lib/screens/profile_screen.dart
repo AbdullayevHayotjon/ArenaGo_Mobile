@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../controllers/app_controller.dart';
+import '../services/api_config.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
 
@@ -19,6 +21,28 @@ class ProfileScreen extends StatelessWidget {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AppToast.successFromRoot(successMessage);
     });
+  }
+
+  Future<void> _openPrivacyPolicy(BuildContext context) async {
+    try {
+      final opened = await launchUrl(
+        Uri.parse(privacyPolicyUrl),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened && context.mounted) {
+        AppToast.error(
+          context,
+          controller.strings.t('privacyPolicyOpenError'),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        AppToast.error(
+          context,
+          controller.strings.t('privacyPolicyOpenError'),
+        );
+      }
+    }
   }
 
   @override
@@ -111,6 +135,13 @@ class ProfileScreen extends StatelessWidget {
                 _ThemeSetting(controller: controller),
                 const _CardDivider(),
                 _LanguageSetting(controller: controller),
+                const _CardDivider(),
+                _ActionSetting(
+                  icon: Icons.privacy_tip_outlined,
+                  title: s.t('privacyPolicy'),
+                  subtitle: s.t('privacyPolicySubtitle'),
+                  onTap: () => _openPrivacyPolicy(context),
+                ),
               ],
             ),
           ),
@@ -425,6 +456,58 @@ class _ThemeSetting extends StatelessWidget {
             onChanged: (_) => controller.toggleTheme(),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ActionSetting extends StatelessWidget {
+  const _ActionSetting({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            _SettingIcon(icon: icon),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.open_in_new_rounded,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              size: 19,
+            ),
+          ],
+        ),
       ),
     );
   }

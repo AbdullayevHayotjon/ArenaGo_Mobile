@@ -14,6 +14,12 @@ const iosStoreUrl = String.fromEnvironment(
   defaultValue: 'https://apps.apple.com/search?term=ArenaGo',
 );
 
+const privacyPolicyUrl = String.fromEnvironment(
+  'PRIVACY_POLICY_URL',
+  defaultValue:
+      'https://abdullayevhayotjon.github.io/ArenaGo_Mobile/privacy-policy.html',
+);
+
 String resolveApiUrl(String path) {
   if (path.trim().isEmpty) return '';
   final parsed = Uri.tryParse(path);

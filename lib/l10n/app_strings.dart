@@ -81,6 +81,10 @@ class AppStrings {
       'lightMode': 'Kunduzgi rejim',
       'darkMode': 'Tungi rejim',
       'languageSubtitle': 'Ilova tilini tanlang',
+      'privacyPolicy': 'Maxfiylik siyosati',
+      'privacyPolicySubtitle': 'Ma’lumotlardan foydalanish tartibi',
+      'privacyPolicyOpenError':
+          'Maxfiylik siyosatini ochib bo‘lmadi. Qayta urinib ko‘ring.',
       'favorites': 'Saqlangan maydonlar',
       'bannerTitleOne': 'Sevimli maydoningizni toping',
       'bannerTextOne': 'ArenaGo bilan futbol maydonlarini tez va oson tanlang.',
@@ -261,6 +265,10 @@ class AppStrings {
       'lightMode': 'Светлая тема',
       'darkMode': 'Тёмная тема',
       'languageSubtitle': 'Выберите язык приложения',
+      'privacyPolicy': 'Политика конфиденциальности',
+      'privacyPolicySubtitle': 'Как используются ваши данные',
+      'privacyPolicyOpenError':
+          'Не удалось открыть политику конфиденциальности. Попробуйте снова.',
       'favorites': 'Сохранённые поля',
       'bannerTitleOne': 'Найдите любимое поле',
       'bannerTextOne': 'С ArenaGo легко выбрать подходящее футбольное поле.',
