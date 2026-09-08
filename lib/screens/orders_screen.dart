@@ -241,7 +241,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
               ),
             ),
             if (_loadingFirstPage)
-              const SliverToBoxAdapter(child: _OrdersLoading())
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: CircularProgressIndicator()),
+              )
             else if (_bookings.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
@@ -767,37 +770,6 @@ class _ImagePlaceholder extends StatelessWidget {
           Icons.sports_soccer_rounded,
           color: AppColors.primary,
           size: 34,
-        ),
-      ),
-    );
-  }
-}
-
-class _OrdersLoading extends StatelessWidget {
-  const _OrdersLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 140),
-      child: Column(
-        children: List.generate(
-          3,
-          (_) => Container(
-            height: 178,
-            margin: const EdgeInsets.only(bottom: 13),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: const Center(
-              child: SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2.2),
-              ),
-            ),
-          ),
         ),
       ),
     );

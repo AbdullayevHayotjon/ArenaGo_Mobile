@@ -318,9 +318,9 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
             if (_loadingFirstPage)
-              const SliverPadding(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, 126),
-                sliver: SliverToBoxAdapter(child: _FieldsLoading()),
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: CircularProgressIndicator()),
               )
             else if (_fields.isEmpty)
               SliverPadding(
@@ -871,30 +871,6 @@ class _ImagePlaceholder extends StatelessWidget {
                 size: 48,
                 color: AppColors.primary.withValues(alpha: .65),
               ),
-      ),
-    );
-  }
-}
-
-class _FieldsLoading extends StatelessWidget {
-  const _FieldsLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: List.generate(
-        3,
-        (index) => Container(
-          height: 260,
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: const Center(
-            child: CircularProgressIndicator(strokeWidth: 2.2),
-          ),
-        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../controllers/app_controller.dart';
 import '../services/api_config.dart';
+import '../services/telegram_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
 
@@ -30,18 +31,53 @@ class ProfileScreen extends StatelessWidget {
         mode: LaunchMode.externalApplication,
       );
       if (!opened && context.mounted) {
-        AppToast.error(
-          context,
-          controller.strings.t('privacyPolicyOpenError'),
-        );
+        AppToast.error(context, controller.strings.t('privacyPolicyOpenError'));
       }
     } catch (_) {
       if (context.mounted) {
-        AppToast.error(
-          context,
-          controller.strings.t('privacyPolicyOpenError'),
-        );
+        AppToast.error(context, controller.strings.t('privacyPolicyOpenError'));
       }
+    }
+  }
+
+  Future<void> _openBotCommand(BuildContext context, String command) async {
+    final opened = await TelegramService.openBot(draftText: command);
+    if (!opened && context.mounted) {
+      AppToast.error(context, controller.strings.t('telegramOpenError'));
+    }
+  }
+
+  Future<void> _confirmAccountDeletion(BuildContext context) async {
+    final s = controller.strings;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(
+          Icons.delete_forever_outlined,
+          color: AppColors.danger,
+          size: 34,
+        ),
+        title: Text(s.t('deleteAccountConfirmTitle')),
+        content: Text(s.t('deleteAccountConfirmText')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(s.t('cancel')),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.telegram_rounded),
+            label: Text(s.t('continueToTelegram')),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      await _openBotCommand(context, '/deleteaccount');
     }
   }
 
@@ -122,6 +158,29 @@ class ProfileScreen extends StatelessWidget {
                   icon: Icons.phone_outlined,
                   label: s.t('phone'),
                   value: session?.phoneNumber ?? '—',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 26),
+          _SectionTitle(title: s.t('accountSecurity')),
+          const SizedBox(height: 10),
+          _SurfaceCard(
+            child: Column(
+              children: [
+                _ActionSetting(
+                  icon: Icons.lock_reset_rounded,
+                  title: s.t('changePassword'),
+                  subtitle: s.t('changePasswordSubtitle'),
+                  onTap: () => _openBotCommand(context, '/reset'),
+                ),
+                const _CardDivider(),
+                _ActionSetting(
+                  icon: Icons.delete_forever_outlined,
+                  title: s.t('deleteAccount'),
+                  subtitle: s.t('deleteAccountSubtitle'),
+                  danger: true,
+                  onTap: () => _confirmAccountDeletion(context),
                 ),
               ],
             ),
@@ -467,12 +526,14 @@ class _ActionSetting extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.danger = false,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool danger;
 
   @override
   Widget build(BuildContext context) {
@@ -483,13 +544,19 @@ class _ActionSetting extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           children: [
-            _SettingIcon(icon: icon),
+            _SettingIcon(icon: icon, color: danger ? AppColors.danger : null),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: danger ? AppColors.danger : null,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 3),
                   Text(
                     subtitle,
@@ -503,7 +570,9 @@ class _ActionSetting extends StatelessWidget {
             ),
             Icon(
               Icons.open_in_new_rounded,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: danger
+                  ? AppColors.danger
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
               size: 19,
             ),
           ],
@@ -598,9 +667,10 @@ class _LanguageSelector extends StatelessWidget {
 }
 
 class _SettingIcon extends StatelessWidget {
-  const _SettingIcon({required this.icon});
+  const _SettingIcon({required this.icon, this.color});
 
   final IconData icon;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -608,10 +678,10 @@ class _SettingIcon extends StatelessWidget {
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: .10),
+        color: (color ?? AppColors.primary).withValues(alpha: .10),
         borderRadius: BorderRadius.circular(13),
       ),
-      child: Icon(icon, color: AppColors.primary, size: 21),
+      child: Icon(icon, color: color ?? AppColors.primary, size: 21),
     );
   }
 }

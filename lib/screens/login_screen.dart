@@ -2,9 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../controllers/app_controller.dart';
+import '../services/telegram_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/arena_logo.dart';
 import '../widgets/app_toast.dart';
@@ -48,28 +48,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _openRegistration() async {
-    final telegramApp = Uri.parse('tg://resolve?domain=ArenaGoSportBot');
-    final telegramWeb = Uri.parse('https://t.me/ArenaGoSportBot');
-    try {
-      final openedInTelegram = await launchUrl(
-        telegramApp,
-        mode: LaunchMode.externalNonBrowserApplication,
-      );
-      if (openedInTelegram) return;
-    } catch (_) {
-      // Telegram o‘rnatilmagan bo‘lsa, quyidagi web havola ishlatiladi.
+    final opened = await TelegramService.openBot();
+    if (!opened && mounted) {
+      AppToast.error(context, widget.controller.strings.t('telegramOpenError'));
     }
-    try {
-      final openedInBrowser = await launchUrl(
-        telegramWeb,
-        mode: LaunchMode.externalApplication,
-      );
-      if (openedInBrowser || !mounted) return;
-    } catch (_) {
-      if (!mounted) return;
-    }
-    if (!mounted) return;
-    AppToast.error(context, widget.controller.strings.t('telegramOpenError'));
   }
 
   @override
